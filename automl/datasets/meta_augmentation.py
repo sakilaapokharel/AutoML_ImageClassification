@@ -39,7 +39,7 @@ def original(dataset, seed=0):
     return Subset(dataset, list(range(len(dataset)))), "original"
 
 
-def drop_random_pct_classes(dataset, seed=0, allowed_pcts=(10, 20, 45, 50), max_tries=20):
+def drop_random_pct_classes(dataset, seed=0, allowed_pcts=(10, 20, 30, 40, 50, 60, 70, 80, 90), max_tries=20):
     """
     Randomly drop classes by a percentage, ensuring at least 2 classes remain.
     """
