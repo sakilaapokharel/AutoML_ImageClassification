@@ -211,8 +211,6 @@ def generate_meta_augmentations(
         variant, tag = apply_strategies(dataset, strategies, seed)
 
         # HARD SAFETY: prevent accidental leakage
-        if "balanced" in tag:
-            continue
         if tag == "original":
             continue
 
