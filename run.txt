@@ -1,0 +1,30 @@
+```bash
+conda create -n automl python=3.10
+conda activate automl
+```
+
+pip install -r requirements.txt
+
+download dataset and put in this root folder
+
+data/emotions
+data/fashion
+data/flowers
+
+Phase 1: Creating Metadata for Algorithm Selection
+python main.py --data_root data/ --datasets emotions --device mps
+python main.py --data_root data/ --datasets fashion --device mps
+python main.py --data_root data/ --datasets flowers --device mps
+
+Phase 2:
+Use this metadata in a TABPFN for algorithm selection or some sort of Portfolio selection
+
+After test sets in skin_cancer
+python main.py --data_root data/ --datasets skin_cancer --device mps
+
+After that run a simple Hyperband on hyperparameters
+train on best model and hyperparameters
+
+Perform test and submit test results
+
+Hope it works

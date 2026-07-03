@@ -1,0 +1,4 @@
+dataset_name,class_num_classes,class_avg_images_per_class,class_min_images_per_class,class_max_images_per_class,class_imbalance_ratio,img_mean_width,img_mean_height,img_mean_pixel_value,img_std_pixel_value,num_train_samples
+fashion,10,6000.0,6000,6000,1.0,28.0,28.0,73.47190856933594,80.91844940185547,60000
+emotions,7,4101.285714285715,436,7215,16.548165137614678,48.0,48.0,128.4005584716797,54.75071716308594,28709
+flowers,102,56.19607843137255,28,181,6.464285714285714,512.0,512.0,91.71084594726562,64.67867279052734,5732
