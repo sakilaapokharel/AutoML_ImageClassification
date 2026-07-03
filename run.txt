@@ -12,6 +12,8 @@ data/fashion
 data/flowers
 
 Phase 1: Creating Metadata for Algorithm Selection
+Mac : device mps
+Win/Linux: device cpu/cuda
 python main.py --data_root data/ --datasets emotions --device mps
 python main.py --data_root data/ --datasets fashion --device mps
 python main.py --data_root data/ --datasets flowers --device mps

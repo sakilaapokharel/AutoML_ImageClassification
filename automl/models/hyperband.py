@@ -110,6 +110,7 @@ def hyperband_search(
         print(f"Saved → {log_path}")
 
     # Better readeability for user
+    print(output_dir)
     merge_all_csv(output_dir)
 
     return log_path

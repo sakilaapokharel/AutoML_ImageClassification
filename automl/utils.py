@@ -32,13 +32,17 @@ class TransformedDataset(torch.utils.data.Dataset):
         return self.transform(img), label
 
 def merge_all_csv(output_dir):
+
+    log_dir = os.path.join(output_dir, "individual_logs")
+
     all_dfs = []
     all_columns = set()
 
-    # Step 1: collect all CSVs except the merged output file
+    # Step 1: collect CSVs safely
     csv_files = [
-        os.path.join(f"{output_dir}/individual_logs", f)
-        for f in os.listdir(output_dir)
+        os.path.join(log_dir, f)
+        for f in os.listdir(log_dir)
+        if f.endswith(".csv")
     ]
 
     for file in csv_files:
@@ -46,18 +50,18 @@ def merge_all_csv(output_dir):
         all_dfs.append(df)
         all_columns.update(df.columns)
 
-    all_columns = list(all_columns)
+    all_columns = sorted(all_columns)
 
-    # Step 2: align all dataframes to same columns
-    aligned_dfs = []
-    for df in all_dfs:
-        df = df.reindex(columns=all_columns)
-        aligned_dfs.append(df)
+    # Step 2: align columns
+    aligned_dfs = [
+        df.reindex(columns=all_columns)
+        for df in all_dfs
+    ]
 
-    # Step 3: concatenate
+    # Step 3: merge
     final_df = pd.concat(aligned_dfs, ignore_index=True)
 
-    # Step 4: replace NaN with None
+    # Step 4: NaN → None
     final_df = final_df.where(pd.notnull(final_df), None)
 
     # Step 5: save
@@ -65,4 +69,3 @@ def merge_all_csv(output_dir):
     final_df.to_csv(output_file, index=False)
 
     print(f"Merged CSV saved to: {output_file}")
-

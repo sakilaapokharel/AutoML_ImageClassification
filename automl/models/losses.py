@@ -5,16 +5,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class FocalLoss(nn.Module):
-    def __init__(self, gamma=2.0):
-        super().__init__()
-        self.gamma = gamma
-
-    def forward(self, logits, target):
-        ce = F.cross_entropy(logits, target, reduction="none")
-        pt = torch.exp(-ce)
-        return ((1 - pt) ** self.gamma * ce).mean()
-
 
 class ClassBalancedLoss(nn.Module):
     """Class-Balanced Loss based on Effective Number of Samples
@@ -44,19 +34,9 @@ def get_loss(name, class_counts=None, device="cpu"):
     if name == "label_smoothing":
         return nn.CrossEntropyLoss(label_smoothing=0.1)
 
-    if name == "focal":
-        return FocalLoss(gamma=2.0)
-
     if name == "class_balanced":
         if class_counts is None:
             raise ValueError("class_counts required for class_balanced loss")
         return ClassBalancedLoss(class_counts)
-
-    if name == "weighted_cross_entropy":
-        if class_counts is None:
-            raise ValueError("class_counts required for weighted_cross_entropy")
-        counts = torch.tensor(class_counts, dtype=torch.float).clamp(min=1)
-        weights = counts.sum() / (len(counts) * counts)
-        return nn.CrossEntropyLoss(weight=weights.to(device))
 
     raise ValueError(f"Unknown loss '{name}'")

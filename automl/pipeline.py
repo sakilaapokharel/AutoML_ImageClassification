@@ -20,7 +20,7 @@ from automl.models.train_eval import train_one_config
 SEARCH_SPACE = {
     "model": ["scratch_cnn", "resnet18", "mobilenet_v2"],
     "augmentation": ["rand_aug", "none"],
-    "loss": ["cross_entropy", "label_smoothing", "focal", "class_balanced", "weighted_cross_entropy"],
+    "loss": ["cross_entropy", "label_smoothing", "class_balanced"],
 }
 
 
