@@ -72,6 +72,7 @@ def hyperband_search(
                         "model": cfg["model"],
                         "augmentation": cfg["augmentation"],
                         "loss": cfg["loss"],
+                        "sampler": cfg["sampler"],
                         "hyperband_bracket": s,
                         "hyperband_rung": i,
                         "epochs_trained": r_i,

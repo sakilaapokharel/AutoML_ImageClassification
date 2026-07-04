@@ -106,7 +106,7 @@ def train_one_config(
     # -------------------------------------------------
     targets = get_targets(train_variant)
 
-    g = torch.Generator().manual_seed(seed)
+    g = torch.Generator().manual_seed(0)
     n = len(full)
 
     n_val = max(1, int(n * val_split))

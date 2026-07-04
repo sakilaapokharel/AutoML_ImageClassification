@@ -30,7 +30,6 @@ SEARCH_SPACE = {
         "resnet34",
         "mobilenet_v2",
         "efficientnet_b0",
-        "efficientnet_b2",
     ],
     "augmentation": ["rand_aug", "none"],
     "sampler": [
