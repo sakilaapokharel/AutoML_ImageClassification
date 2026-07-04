@@ -2,7 +2,8 @@ import math
 import os
 import time
 import pandas as pd
-from automl.utils import merge_all_csv
+from automl_metadata.utils import merge_all_csv
+
 
 def hyperband_search(
     config_sampler,
@@ -37,7 +38,7 @@ def hyperband_search(
 
     for s in reversed(range(s_max + 1)):
 
-        n = int(math.ceil(B / max_epochs / (s + 1) * (eta ** s)))
+        n = int(math.ceil(B / max_epochs / (s + 1) * (eta**s)))
         r = max_epochs * (eta ** (-s))
 
         configs = [config_sampler() for _ in range(n)]
@@ -48,7 +49,7 @@ def hyperband_search(
         for i in range(s + 1):
 
             n_i = int(n * (eta ** (-i)))
-            r_i = max(1, int(round(r * (eta ** i))))
+            r_i = max(1, int(round(r * (eta**i))))
 
             evaluated = []
 
@@ -66,19 +67,19 @@ def hyperband_search(
                 # FULL ROW (FINAL SCHEMA MATCHING YOUR DF)
                 # ---------------------------------------
                 row = dict(meta_features)
-                row.update({
-                    "model": cfg["model"],
-                    "augmentation": cfg["augmentation"],
-                    "loss": cfg["loss"],
-
-                    "hyperband_bracket": s,
-                    "hyperband_rung": i,
-                    "epochs_trained": r_i,
-
-                    "hyperband_val_accuracy": val_acc,
-                    "test_accuracy": extra.get("test_accuracy"),
-                    "compute_time_sec": extra.get("compute_time_sec"),
-                })
+                row.update(
+                    {
+                        "model": cfg["model"],
+                        "augmentation": cfg["augmentation"],
+                        "loss": cfg["loss"],
+                        "hyperband_bracket": s,
+                        "hyperband_rung": i,
+                        "epochs_trained": r_i,
+                        "hyperband_val_accuracy": val_acc,
+                        "test_accuracy": extra.get("test_accuracy"),
+                        "compute_time_sec": extra.get("compute_time_sec"),
+                    }
+                )
 
                 evaluated.append((cfg, val_acc))
                 if verbose:

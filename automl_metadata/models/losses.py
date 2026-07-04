@@ -1,9 +1,9 @@
 """Loss search space: Cross Entropy, Label Smoothing, Focal Loss,
 Class-Balanced Loss, Weighted Cross Entropy (the diagram's rightmost box)."""
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 
 
 class ClassBalancedLoss(nn.Module):

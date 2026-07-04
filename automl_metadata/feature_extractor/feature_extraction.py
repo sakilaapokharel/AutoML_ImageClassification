@@ -1,10 +1,11 @@
 """Feature Extraction box: turns a dataset variant into a flat dict of
 'dataset meta-features' -- these become the 'dataset features' columns in the
 final results dataframe (dataset features | model | augmentation | loss)."""
+
 import numpy as np
 from collections import Counter
 from PIL import Image
-from automl.utils import get_targets
+from automl_metadata.utils import get_targets
 
 
 def extract_dataset_meta_features(dataset, variant_name="original"):
@@ -54,15 +55,12 @@ def extract_dataset_meta_features(dataset, variant_name="original"):
         "variant": variant_name,
         "n_samples": n,
         "n_classes": len(counts),
-
         "min_class_count": int(class_counts.min()),
         "max_class_count": int(class_counts.max()),
         "mean_class_count": float(class_counts.mean()),
         "class_count_std": float(class_counts.std()),
-
         "class_balance_entropy": entropy,
         "imbalance_ratio": imbalance_ratio,
-
         # image features
         "img_mean_width": img_mean_width,
         "img_mean_height": img_mean_height,

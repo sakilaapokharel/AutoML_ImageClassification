@@ -21,6 +21,7 @@ A) CSV layout (used whenever train.csv + test.csv exist):
     csv's filename value can be with or without extension.
 
 """
+
 import os
 from dataclasses import dataclass
 from typing import Optional
@@ -42,8 +43,7 @@ def list_available_datasets(data_root="data"):
     if not os.path.isdir(data_root):
         raise FileNotFoundError(f"data_root '{data_root}' does not exist")
     return sorted(
-        d for d in os.listdir(data_root)
-        if os.path.isdir(os.path.join(data_root, d))
+        d for d in os.listdir(data_root) if os.path.isdir(os.path.join(data_root, d))
     )
 
 
@@ -76,10 +76,18 @@ class CSVImageDataset(torch.utils.data.Dataset):
     """(image, label) dataset driven by a CSV file + an image directory
     (possibly nested)."""
 
-    def __init__(self, image_dir, csv_path, filename_col="image_file_name", label_col="label",
-                 class_to_idx=None):
+    def __init__(
+        self,
+        image_dir,
+        csv_path,
+        filename_col="image_file_name",
+        label_col="label",
+        class_to_idx=None,
+    ):
         df = pd.read_csv(csv_path)
-        self.filename_col = filename_col or _guess_column(df, FILENAME_CANDIDATES, "filename")
+        self.filename_col = filename_col or _guess_column(
+            df, FILENAME_CANDIDATES, "filename"
+        )
         self.label_col = label_col or _guess_column(df, LABEL_CANDIDATES, "label")
 
         self.filenames = df[self.filename_col].astype(str).tolist()
@@ -118,7 +126,9 @@ class CSVImageDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         path = self._resolve_path(self.filenames[idx])
-        img = Image.open(path).convert("RGB")
+        img = Image.open(path)
+        if img.mode not in ["RGB", "L"]:
+            img = img.convert("RGB")
         return img, self.targets[idx]
 
 
@@ -127,7 +137,7 @@ class DatasetBundle:
     train: torch.utils.data.Dataset
     test: torch.utils.data.Dataset
     classes: list
-
+    num_channels: int
 
 def _find_existing(base, candidates):
     for c in candidates:
@@ -136,9 +146,22 @@ def _find_existing(base, candidates):
             return p
     return None
 
+def _detect_num_channels(dataset):
+    sample_img, _ = dataset[0]
 
-def load_dataset(name, data_root="data", filename_col: Optional[str] = None,
-                  label_col: Optional[str] = None) -> DatasetBundle:
+    if sample_img.mode == "RGB":
+        return 3
+    elif sample_img.mode == "L":
+        return 1
+    else:
+        return len(sample_img.getbands())
+
+def load_dataset(
+    name,
+    data_root="data",
+    filename_col: Optional[str] = None,
+    label_col: Optional[str] = None,
+) -> DatasetBundle:
     """Load a dataset by folder name, auto-detecting layout A (CSV) vs
     layout B (ImageFolder) as described in the module docstring."""
     base = os.path.join(data_root, name)
@@ -152,15 +175,16 @@ def load_dataset(name, data_root="data", filename_col: Optional[str] = None,
     test_csv = _find_existing(base, ["test.csv"])
 
     if train_csv and test_csv:
-        train_dir = _find_existing(
-            base, ["images_train"]
-        ) or base
-        test_dir = _find_existing(
-            base, ["images_test"]
-        ) or base
+        train_dir = _find_existing(base, ["images_train"]) or base
+        test_dir = _find_existing(base, ["images_test"]) or base
 
         train_ds = CSVImageDataset(train_dir, train_csv, filename_col, label_col)
         test_ds = CSVImageDataset(
-            test_dir, test_csv, filename_col, label_col, class_to_idx=train_ds.class_to_idx
+            test_dir,
+            test_csv,
+            filename_col,
+            label_col,
+            class_to_idx=train_ds.class_to_idx,
         )
-        return DatasetBundle(train=train_ds, test=test_ds, classes=train_ds.classes)
+        num_channels = _detect_num_channels(train_ds)
+        return DatasetBundle(train=train_ds, test=test_ds, classes=train_ds.classes, num_channels=num_channels)

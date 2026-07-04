@@ -1,8 +1,10 @@
 """Shared helpers used by multiple pipeline modules."""
+
 import torch
 
 import os
 import pandas as pd
+
 
 def get_targets(dataset):
     """Recursively resolve the integer class-label list for a Dataset/Subset."""
@@ -11,8 +13,9 @@ def get_targets(dataset):
     if hasattr(dataset, "dataset") and hasattr(dataset, "indices"):
         base = get_targets(dataset.dataset)
         return [base[i] for i in dataset.indices]
-    raise AttributeError("Could not resolve targets for dataset of type "
-                          f"{type(dataset)}")
+    raise AttributeError(
+        "Could not resolve targets for dataset of type " f"{type(dataset)}"
+    )
 
 
 class TransformedDataset(torch.utils.data.Dataset):
@@ -31,6 +34,7 @@ class TransformedDataset(torch.utils.data.Dataset):
         img, label = self.base[idx]
         return self.transform(img), label
 
+
 def merge_all_csv(output_dir):
 
     log_dir = os.path.join(output_dir, "individual_logs")
@@ -40,9 +44,7 @@ def merge_all_csv(output_dir):
 
     # Step 1: collect CSVs safely
     csv_files = [
-        os.path.join(log_dir, f)
-        for f in os.listdir(log_dir)
-        if f.endswith(".csv")
+        os.path.join(log_dir, f) for f in os.listdir(log_dir) if f.endswith(".csv")
     ]
 
     for file in csv_files:
@@ -53,10 +55,7 @@ def merge_all_csv(output_dir):
     all_columns = sorted(all_columns)
 
     # Step 2: align columns
-    aligned_dfs = [
-        df.reindex(columns=all_columns)
-        for df in all_dfs
-    ]
+    aligned_dfs = [df.reindex(columns=all_columns) for df in all_dfs]
 
     # Step 3: merge
     final_df = pd.concat(aligned_dfs, ignore_index=True)

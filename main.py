@@ -5,8 +5,8 @@ Example:
         --max_epochs 9 --device cuda --output_csv automl_results.csv
 """
 import argparse
-from automl.pipeline import run_pipeline
-from automl.utils import merge_all_csv
+from automl_metadata.pipeline import run_pipeline
+from automl_metadata.utils import merge_all_csv
 import random
 
 def main():
@@ -19,10 +19,10 @@ def main():
                     help="Folder containing one subfolder per dataset, e.g. data/emotions")
     p.add_argument("--datasets", nargs="*", default=None,
                     help="Subset of dataset folder names to run. Default: all found under data_root.")
-    p.add_argument("--n_meta_augmentations", type=int, default=11,
+    p.add_argument("--n_meta_augmentations", type=int, default=5, 
                     help="Number of random meta-augmentation iterations per dataset "
                          "(the diagram's 'Run N different iterations').")
-    p.add_argument("--max_epochs", type=int, default=11,
+    p.add_argument("--max_epochs", type=int, default=29,
                     help="Hyperband max resource (epochs given to top-surviving configs).")
     p.add_argument("--eta", type=int, default=3, help="Hyperband downsampling rate.")
     p.add_argument("--device", default="cpu", help="'cpu' or 'cuda'.")
@@ -30,7 +30,7 @@ def main():
                     help="Override auto-detected filename column in train.csv/test.csv.")
     p.add_argument("--label_col", default=None,
                     help="Override auto-detected label column in train.csv/test.csv.")
-    p.add_argument("--output_dir", default=f"metadata/")
+    p.add_argument("--output_dir", default=f"metadatas/")
     p.add_argument("--seed", type=int, default=0)
     args = p.parse_args()
 

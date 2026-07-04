@@ -14,8 +14,7 @@ import random
 from collections import defaultdict
 from torch.utils.data import Subset
 
-from automl.utils import get_targets
-
+from automl_metadata.utils import get_targets
 
 # =========================================================
 # Strategy registry
@@ -35,6 +34,7 @@ STRATEGIES = [
 # Utilities
 # =========================================================
 
+
 def _indices_by_class(dataset):
     targets = get_targets(dataset)
     by_class = defaultdict(list)
@@ -47,15 +47,13 @@ def _indices_by_class(dataset):
 # Base strategies
 # =========================================================
 
+
 def original(dataset, seed=0):
     return Subset(dataset, list(range(len(dataset)))), "original"
 
 
 def drop_random_pct_classes(
-    dataset,
-    seed=0,
-    allowed_pcts=(10, 20, 30, 40, 50, 60, 70, 80, 90),
-    max_tries=20
+    dataset, seed=0, allowed_pcts=(10, 20, 30, 40, 50, 60, 70, 80, 90), max_tries=20
 ):
     rng = random.Random(seed)
 
@@ -152,6 +150,7 @@ STRATEGY_FNS = {
 # Composition logic
 # =========================================================
 
+
 def apply_strategies(dataset, strategies, seed):
     current = dataset
     tags = []
@@ -167,6 +166,7 @@ def apply_strategies(dataset, strategies, seed):
 # =========================================================
 # MAIN GENERATOR (STRICT ORDERING)
 # =========================================================
+
 
 def generate_meta_augmentations(
     dataset,
@@ -189,10 +189,7 @@ def generate_meta_augmentations(
     # -----------------------------------------------------
     # SAFE POOL (NO original, NO balanced, NO composite)
     # -----------------------------------------------------
-    safe_pool = [
-        s for s in STRATEGY_FNS.keys()
-        if s not in {"original"}
-    ]
+    safe_pool = [s for s in STRATEGY_FNS.keys() if s not in {"original"}]
 
     total_random_runs = n_runs - 1 if force_original_last else n_runs
 
@@ -203,8 +200,9 @@ def generate_meta_augmentations(
         seed = seed_base + i
 
         if rng.random() < combo_prob:
-            k = rng.randint(2, min(max_combo_size, len(safe_pool)))
-            strategies = rng.sample(safe_pool, k)
+            # k = rng.randint(2, min(max_combo_size, len(safe_pool)))
+            # strategies = rng.sample(safe_pool, k)
+            strategies = [rng.choice(safe_pool)]
         else:
             strategies = [rng.choice(safe_pool)]
 
@@ -221,6 +219,4 @@ def generate_meta_augmentations(
     # 2. FORCE ORIGINAL LAST
     # =====================================================
     if force_original_last:
-        yield run_id, "original_forced_last", Subset(
-            dataset, list(range(len(dataset)))
-        )
+        yield run_id, "original_forced_last", Subset(dataset, list(range(len(dataset))))
