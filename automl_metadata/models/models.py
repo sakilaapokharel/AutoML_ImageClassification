@@ -117,17 +117,19 @@ def build_model(name, num_classes, in_channels=3):
         return m
 
     # -------------------------------------------------
-    # ResNet34 (stronger baseline)
+    # densenet121
     # -------------------------------------------------
-    if name == "resnet34":
-        m = models.resnet34(weights=models.ResNet34_Weights.IMAGENET1K_V1)
+    if name == "densenet121":
+        m = models.densenet121(
+            weights=models.DenseNet121_Weights.IMAGENET1K_V1
+        )
 
-        m.conv1 = adapt_first_conv(m.conv1, in_channels)
+        m.features.conv0 = adapt_first_conv(m.features.conv0, in_channels)
 
         for p in m.parameters():
             p.requires_grad = False
 
-        m.fc = head(m.fc.in_features, num_classes)
+        m.classifier = head(m.classifier.in_features, num_classes)
 
         return m
 

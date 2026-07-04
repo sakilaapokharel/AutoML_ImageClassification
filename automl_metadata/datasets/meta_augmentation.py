@@ -162,6 +162,7 @@ def apply_strategies(dataset, strategies, seed):
 
     return current, "+".join(tags)
 
+
 def align_test_to_train_labels(train_ds, test_ds):
     """
     Ensures:
@@ -192,7 +193,7 @@ def align_test_to_train_labels(train_ds, test_ds):
 
         test_ds = Subset(
             test_ds,
-            [i for i, y in enumerate(get_targets(test_ds)) if y in train_labels]
+            [i for i, y in enumerate(get_targets(test_ds)) if y in train_labels],
         )
 
     # -------------------------------------------------
@@ -200,8 +201,9 @@ def align_test_to_train_labels(train_ds, test_ds):
     # -------------------------------------------------
     test_labels_after = set(get_targets(test_ds))
 
-    assert test_labels_after.issubset(train_labels), \
-        "Test still contains unseen labels after alignment"
+    assert test_labels_after.issubset(
+        train_labels
+    ), "Test still contains unseen labels after alignment"
 
     return train_ds, test_ds
 

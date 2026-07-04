@@ -139,12 +139,14 @@ class DatasetBundle:
     classes: list
     num_channels: int
 
+
 def _find_existing(base, candidates):
     for c in candidates:
         p = os.path.join(base, c)
         if os.path.exists(p):
             return p
     return None
+
 
 def _detect_num_channels(dataset):
     sample_img, _ = dataset[0]
@@ -155,6 +157,7 @@ def _detect_num_channels(dataset):
         return 1
     else:
         return len(sample_img.getbands())
+
 
 def load_dataset(
     name,
@@ -187,4 +190,9 @@ def load_dataset(
             class_to_idx=train_ds.class_to_idx,
         )
         num_channels = _detect_num_channels(train_ds)
-        return DatasetBundle(train=train_ds, test=test_ds, classes=train_ds.classes, num_channels=num_channels)
+        return DatasetBundle(
+            train=train_ds,
+            test=test_ds,
+            classes=train_ds.classes,
+            num_channels=num_channels,
+        )

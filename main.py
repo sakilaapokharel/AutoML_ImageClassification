@@ -22,7 +22,7 @@ def main():
     p.add_argument("--n_meta_augmentations", type=int, default=5, 
                     help="Number of random meta-augmentation iterations per dataset "
                          "(the diagram's 'Run N different iterations').")
-    p.add_argument("--max_epochs", type=int, default=29,
+    p.add_argument("--max_epochs", type=int, default=11,
                     help="Hyperband max resource (epochs given to top-surviving configs).")
     p.add_argument("--eta", type=int, default=3, help="Hyperband downsampling rate.")
     p.add_argument("--device", default="cpu", help="'cpu' or 'cuda'.")

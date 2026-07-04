@@ -21,29 +21,25 @@ from tqdm import tqdm
 from automl_metadata.models.models import build_model, trainable_parameters
 from automl_metadata.models.losses import get_loss
 from automl_metadata.utils import get_targets, TransformedDataset
-from automl_metadata.models.sampler import get_sampler 
+from automl_metadata.models.sampler import get_sampler
 
 # =====================================================
 # Constants
 # =====================================================
 
-IMG_SIZE = 224
 
 RGB_NORMALIZE = transforms.Normalize(
-    mean=[0.485, 0.456, 0.406],
-    std=[0.229, 0.224, 0.225]
+    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
 )
 
-GRAY_NORMALIZE = transforms.Normalize(
-    mean=[0.5],
-    std=[0.5]
-)
+GRAY_NORMALIZE = transforms.Normalize(mean=[0.5], std=[0.5])
 
 to_tensor = transforms.ToTensor()
 
 # =====================================================
 # Augmentation
 # =====================================================
+
 
 def get_transform(aug_mode, in_channels=3):
     ops = []
@@ -53,7 +49,7 @@ def get_transform(aug_mode, in_channels=3):
 
     elif aug_mode == "rand_aug":
         print("RandAugment Applied")
-        mag = random.choice([5, 7, 9, 11, 13, 15])
+        mag = random.choice([3, 5, 7, 9])
         ops.append(transforms.RandAugment(num_ops=2, magnitude=mag))
 
     else:

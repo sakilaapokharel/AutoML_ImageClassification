@@ -16,7 +16,10 @@ from automl_metadata.datasets.dataset_loader import (
     list_available_datasets,
     load_dataset,
 )
-from automl_metadata.datasets.meta_augmentation import generate_meta_augmentations, align_test_to_train_labels
+from automl_metadata.datasets.meta_augmentation import (
+    generate_meta_augmentations,
+    align_test_to_train_labels,
+)
 from automl_metadata.feature_extractor.feature_extraction import (
     extract_dataset_meta_features,
 )
@@ -24,13 +27,14 @@ from automl_metadata.models.hyperband import hyperband_search
 from automl_metadata.models.train_eval import train_one_config
 from collections import Counter
 from automl_metadata.utils import get_targets
+
 SEARCH_SPACE = {
     "model": [
         "scratch_cnn",
         "resnet18",
-        "resnet34",
         "mobilenet_v2",
         "efficientnet_b0",
+        "densenet121",
     ],
     "augmentation": ["rand_aug", "none"],
     "sampler": [
@@ -79,7 +83,7 @@ def run_pipeline(
         bundle = load_dataset(
             ds_name, data_root, filename_col=filename_col, label_col=label_col
         )
-        
+
         num_classes = len(bundle.classes)
         num_channels = bundle.num_channels
 
@@ -97,7 +101,7 @@ def run_pipeline(
             if len(variant_ds) < 4:
                 # Too few samples to train/validate meaningfully; skip.
                 continue
-            
+
             _, bundle.test = align_test_to_train_labels(variant_ds, bundle.test)
 
             train_targets = get_targets(variant_ds)
@@ -108,7 +112,7 @@ def run_pipeline(
 
             print("Train class counts:", Counter(train_targets))
             print("Test class counts:", Counter(test_targets))
-            
+
             meta_features = extract_dataset_meta_features(
                 variant_ds, variant_name=variant_tag
             )
@@ -125,7 +129,11 @@ def run_pipeline(
                 return sample_config(rng)
 
             def run_config(
-                cfg, n_epochs, _variant_ds=variant_ds, _num_classes=num_classes, _num_channels=num_channels
+                cfg,
+                n_epochs,
+                _variant_ds=variant_ds,
+                _num_classes=num_classes,
+                _num_channels=num_channels,
             ):
                 return train_one_config(
                     _variant_ds,
