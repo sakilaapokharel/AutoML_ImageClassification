@@ -162,6 +162,49 @@ def apply_strategies(dataset, strategies, seed):
 
     return current, "+".join(tags)
 
+def align_test_to_train_labels(train_ds, test_ds):
+    """
+    Ensures:
+    1. test labels exist in train label space
+    2. no label remapping corruption
+    3. stable label indices across pipeline
+    """
+
+    train_labels = set(get_targets(train_ds))
+    test_labels = set(get_targets(test_ds))
+
+    # -------------------------------------------------
+    # 1. sanity check: label corruption detection
+    # -------------------------------------------------
+    if not all(isinstance(x, int) for x in train_labels):
+        raise ValueError("Train labels are not integer encoded properly")
+
+    if not all(isinstance(x, int) for x in test_labels):
+        raise ValueError("Test labels are not integer encoded properly")
+
+    # -------------------------------------------------
+    # 2. detect mismatch
+    # -------------------------------------------------
+    missing_in_train = test_labels - train_labels
+
+    if missing_in_train:
+        print(f"[WARN] Dropping unseen test labels: {missing_in_train}")
+
+        test_ds = Subset(
+            test_ds,
+            [i for i, y in enumerate(get_targets(test_ds)) if y in train_labels]
+        )
+
+    # -------------------------------------------------
+    # 3. final consistency check
+    # -------------------------------------------------
+    test_labels_after = set(get_targets(test_ds))
+
+    assert test_labels_after.issubset(train_labels), \
+        "Test still contains unseen labels after alignment"
+
+    return train_ds, test_ds
+
 
 # =========================================================
 # MAIN GENERATOR (STRICT ORDERING)

@@ -16,13 +16,14 @@ from automl_metadata.datasets.dataset_loader import (
     list_available_datasets,
     load_dataset,
 )
-from automl_metadata.datasets.meta_augmentation import generate_meta_augmentations
+from automl_metadata.datasets.meta_augmentation import generate_meta_augmentations, align_test_to_train_labels
 from automl_metadata.feature_extractor.feature_extraction import (
     extract_dataset_meta_features,
 )
 from automl_metadata.models.hyperband import hyperband_search
 from automl_metadata.models.train_eval import train_one_config
-
+from collections import Counter
+from automl_metadata.utils import get_targets
 SEARCH_SPACE = {
     "model": [
         "scratch_cnn",
@@ -96,7 +97,18 @@ def run_pipeline(
             if len(variant_ds) < 4:
                 # Too few samples to train/validate meaningfully; skip.
                 continue
+            
+            _, bundle.test = align_test_to_train_labels(variant_ds, bundle.test)
 
+            train_targets = get_targets(variant_ds)
+            test_targets = get_targets(bundle.test)
+
+            print("Train unique classes:", sorted(set(train_targets)))
+            print("Test unique classes:", sorted(set(test_targets)))
+
+            print("Train class counts:", Counter(train_targets))
+            print("Test class counts:", Counter(test_targets))
+            
             meta_features = extract_dataset_meta_features(
                 variant_ds, variant_name=variant_tag
             )
