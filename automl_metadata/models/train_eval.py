@@ -80,6 +80,7 @@ def train_one_config(
     num_classes,
     num_channels,
     config,
+    meta_features,
     n_epochs,
     device="cpu",
     val_split=0.15,
@@ -144,7 +145,7 @@ def train_one_config(
     # -------------------------------------------------
     # Model
     # -------------------------------------------------
-    model, name = build_model(config["model"], num_classes, in_channels=num_channels)
+    model, name = build_model(config["model"], num_classes, in_channels=num_channels, img_size=meta_features["img_mean_height"], resize=config["resize"])
     model = model.to(device)
 
     print(f"[Model] Using: {name}")
@@ -168,6 +169,7 @@ def train_one_config(
     start = time.time()
     model.train()
 
+    # Cross check for dense121
     for epoch in range(n_epochs):
         running_loss = 0.0
 

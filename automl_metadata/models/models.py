@@ -90,7 +90,7 @@ def adapt_first_conv(conv, in_channels):
 # =====================================================
 
 
-def build_model(name, num_classes, in_channels=3):
+def build_model(name, num_classes, in_channels=3, img_size=28, resize=0):
     name = name.lower()
 
     # -------------------------------------------------
@@ -118,7 +118,7 @@ def build_model(name, num_classes, in_channels=3):
     # densenet121
     # -------------------------------------------------
     if name == "densenet121":
-        try:
+        if resize or img_size >= 32:
             m = models.densenet121(
                 weights=models.DenseNet121_Weights.IMAGENET1K_V1
             )
@@ -131,7 +131,7 @@ def build_model(name, num_classes, in_channels=3):
             m.classifier = head(m.classifier.in_features, num_classes)
 
             return m, name
-        except:
+        else:
             print("ERROR LOADING DENSENET121 so loading scratch_cnn")
             return ScratchCNN(num_classes, in_channels), "scratch_cnn"
 

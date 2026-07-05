@@ -146,6 +146,7 @@ def run_pipeline(
                     _num_classes,
                     _num_channels,
                     cfg,
+                    meta_features,
                     n_epochs,
                     device=device,
                     seed=seed,
