@@ -41,8 +41,12 @@ to_tensor = transforms.ToTensor()
 # =====================================================
 
 
-def get_transform(aug_mode, in_channels=3):
+def get_transform(aug_mode, resize, in_channels=3):
     ops = []
+    
+    if resize == 1:
+        print("Resize: 224x224")
+        ops.append(transforms.Resize((224, 224)))
 
     if aug_mode == "none":
         print("No Augmentation Applied")
@@ -94,7 +98,7 @@ def train_one_config(
     # -------------------------------------------------
     # Build transformed dataset
     # -------------------------------------------------
-    transform = get_transform(config["augmentation"], num_channels)
+    transform = get_transform(config["augmentation"], config["resize"], num_channels)
     full = TransformedDataset(train_variant, transform)
 
     # -------------------------------------------------
@@ -130,7 +134,7 @@ def train_one_config(
 
     val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
 
-    test_transform = get_transform("none", num_channels)
+    test_transform = get_transform("none", config["resize"],num_channels)
     test_loader = DataLoader(
         TransformedDataset(test_dataset, test_transform),
         batch_size=batch_size,
@@ -140,10 +144,11 @@ def train_one_config(
     # -------------------------------------------------
     # Model
     # -------------------------------------------------
-    model = build_model(config["model"], num_classes, in_channels=num_channels).to(
-        device
-    )
+    model, name = build_model(config["model"], num_classes, in_channels=num_channels)
+    model = model.to(device)
 
+    print(f"[Model] Using: {name}")
+    config["model"] = name
     print("Device:", next(model.parameters()).device)
 
     # -------------------------------------------------

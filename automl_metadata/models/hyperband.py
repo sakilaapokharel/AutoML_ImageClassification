@@ -66,6 +66,9 @@ def hyperband_search(
                 # ---------------------------------------
                 # FULL ROW (FINAL SCHEMA MATCHING YOUR DF)
                 # ---------------------------------------
+                if cfg["resize"]==1:
+                    meta_features["img_mean_height"] = 224
+                    merge_all_csv["img_mean_width"] = 224
                 row = dict(meta_features)
                 row.update(
                     {
@@ -73,6 +76,7 @@ def hyperband_search(
                         "augmentation": cfg["augmentation"],
                         "loss": cfg["loss"],
                         "sampler": cfg["sampler"],
+                        "resize": cfg["resize"],
                         "hyperband_bracket": s,
                         "hyperband_rung": i,
                         "epochs_trained": r_i,

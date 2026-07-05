@@ -93,13 +93,11 @@ def adapt_first_conv(conv, in_channels):
 def build_model(name, num_classes, in_channels=3):
     name = name.lower()
 
-    print(f"[Model] Using: {name}")
-
     # -------------------------------------------------
     # Scratch CNN
     # -------------------------------------------------
     if name == "scratch_cnn":
-        return ScratchCNN(num_classes, in_channels)
+        return ScratchCNN(num_classes, in_channels), name
 
     # -------------------------------------------------
     # ResNet18
@@ -114,24 +112,28 @@ def build_model(name, num_classes, in_channels=3):
 
         m.fc = head(m.fc.in_features, num_classes)
 
-        return m
+        return m, name
 
     # -------------------------------------------------
     # densenet121
     # -------------------------------------------------
     if name == "densenet121":
-        m = models.densenet121(
-            weights=models.DenseNet121_Weights.IMAGENET1K_V1
-        )
+        try:
+            m = models.densenet121(
+                weights=models.DenseNet121_Weights.IMAGENET1K_V1
+            )
 
-        m.features.conv0 = adapt_first_conv(m.features.conv0, in_channels)
+            m.features.conv0 = adapt_first_conv(m.features.conv0, in_channels)
 
-        for p in m.parameters():
-            p.requires_grad = False
+            for p in m.parameters():
+                p.requires_grad = False
 
-        m.classifier = head(m.classifier.in_features, num_classes)
+            m.classifier = head(m.classifier.in_features, num_classes)
 
-        return m
+            return m, name
+        except:
+            print("ERROR LOADING DENSENET121 so loading scratch_cnn")
+            return ScratchCNN(num_classes, in_channels), "scratch_cnn"
 
     # -------------------------------------------------
     # MobileNetV2 (lightweight)
@@ -147,7 +149,7 @@ def build_model(name, num_classes, in_channels=3):
 
         m.classifier[1] = head(m.classifier[1].in_features, num_classes)
 
-        return m
+        return m, name
 
     # -------------------------------------------------
     # EfficientNet-B0 (best tradeoff)
@@ -163,7 +165,7 @@ def build_model(name, num_classes, in_channels=3):
 
         m.classifier[1] = head(m.classifier[1].in_features, num_classes)
 
-        return m
+        return m, name
 
     # -------------------------------------------------
     # EfficientNet-B2 (higher capacity)
@@ -179,7 +181,7 @@ def build_model(name, num_classes, in_channels=3):
 
         m.classifier[1] = head(m.classifier[1].in_features, num_classes)
 
-        return m
+        return m, name
 
     raise ValueError(f"Unknown model: {name}")
 

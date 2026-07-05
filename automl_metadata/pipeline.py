@@ -42,6 +42,10 @@ SEARCH_SPACE = {
         "weighted",
     ],
     "loss": ["cross_entropy", "label_smoothing", "class_balanced"],
+    "resize": [
+        0,        
+        1,  
+    ],
 }
 
 
@@ -51,6 +55,7 @@ def sample_config(rng):
         "augmentation": rng.choice(SEARCH_SPACE["augmentation"]),
         "loss": rng.choice(SEARCH_SPACE["loss"]),
         "sampler": rng.choice(SEARCH_SPACE["sampler"]),
+        "resize": rng.choice(SEARCH_SPACE["resize"]),
     }
 
 
