@@ -2,3 +2,4 @@ data/
 metadata/
 metadatas/
 __pycache__/
+*.env
