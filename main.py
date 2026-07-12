@@ -1,57 +1,131 @@
-"""CLI entry point.
-
-Example:
-    python main.py --data_root data --datasets emotions --n_meta_augmentations 5 \\
-        --max_epochs 9 --device cuda --output_csv automl_results.csv
-"""
 import argparse
-from automl_metadata.pipeline import run_pipeline
-from automl_metadata.utils import merge_all_csv
-import random
+from dotenv import load_dotenv
+import os
 
-def main():
-    p = argparse.ArgumentParser(
-        description="End-to-end AutoML pipeline: dataset -> meta-augmentation -> "
-                     "feature extraction -> Hyperband training over "
-                     "{model x augmentation x loss}."
-    )
-    p.add_argument("--data_root", default="data",
-                    help="Folder containing one subfolder per dataset, e.g. data/emotions")
-    p.add_argument("--datasets", nargs="*", default=None,
-                    help="Subset of dataset folder names to run. Default: all found under data_root.")
-    p.add_argument("--n_meta_augmentations", type=int, default=5, 
-                    help="Number of random meta-augmentation iterations per dataset "
-                         "(the diagram's 'Run N different iterations').")
-    p.add_argument("--max_epochs", type=int, default=11,
-                    help="Hyperband max resource (epochs given to top-surviving configs).")
-    p.add_argument("--eta", type=int, default=3, help="Hyperband downsampling rate.")
-    p.add_argument("--device", default="cpu", help="'cpu' or 'cuda'.")
-    p.add_argument("--filename_col", default=None,
-                    help="Override auto-detected filename column in train.csv/test.csv.")
-    p.add_argument("--label_col", default=None,
-                    help="Override auto-detected label column in train.csv/test.csv.")
-    p.add_argument("--output_dir", default=f"metadatas/")
-    p.add_argument("--seed", type=int, default=0)
-    args = p.parse_args()
+from tabpfn import TabPFNRegressor
+import pandas as pd
 
-    seed = random.randint(1, 111)
-    run_pipeline(
-        data_root=args.data_root,
-        dataset_names=args.datasets,
-        n_meta_augmentations=args.n_meta_augmentations,
-        max_epochs=args.max_epochs,
-        eta=args.eta,
-        device=args.device,
-        filename_col=args.filename_col,
-        label_col=args.label_col,
-        output_dir=args.output_dir,
-        seed=seed,
+from automl_tabpfn.get_features import get_features_and_target
+from automl_tabpfn.preprocess import preprocess
+from automl_metadata.feature_extractor.feature_extraction import extract_dataset_meta_features
+from automl_metadata.datasets.dataset_loader import load_dataset
+from automl_tabpfn.get_model_search_space import generate_test_configurations
+
+def main(dataset_name, data_root, target):
+    if target == "accuracy":
+        target_col = "test_accuracy"
+    else:
+        target_col = "compute_time_sec"
+    load_dotenv()
+
+    print("API key loaded:", os.getenv("TABPFN_API_KEY") is not None)
+    os.environ["TABPFN_TOKEN"] = os.getenv("TABPFN_API_KEY")
+
+    # Load training data
+    df = pd.read_csv("metadatas/combined_metadata_csv.csv")
+
+    X_train, y_train, feat_cols = get_features_and_target(
+        df,
+        target
     )
 
-    # call after pipeline
-    merge_all_csv(args.output_dir)
+    X_train_processed, preprocessor = preprocess(X_train)
 
-    print("End of Metadata Collection")
+    model = TabPFNRegressor(
+        random_state=42,
+    )
 
+    model.fit(X_train_processed, y_train)
+
+    # Extract test metadata
+    dataset = load_dataset(dataset_name, data_root=data_root)
+    dataset_features = extract_dataset_meta_features(dataset.train)
+    X_test = generate_test_configurations(
+        dataset_features
+    )
+    
+    # Same feature order as training
+    X_test = X_test[feat_cols]
+
+
+    # preprocess
+    X_test_processed = preprocessor.transform(
+        X_test
+    )
+
+
+    # predict
+    predictions = model.predict(
+        X_test_processed
+    )
+
+    # Add predictions
+    X_test[target_col] = predictions
+
+    # Configuration columns to move to the end
+    config_cols = [
+        "model",
+        "sampler",
+        "resize",
+        "augmentation",
+        "loss",
+        "epochs_trained",
+    ]
+
+    # Keep all other metadata columns first
+    meta_cols = [
+        c for c in X_test.columns
+        if c not in config_cols + [target_col]
+    ]
+
+    # Reorder
+    X_test = X_test[
+        meta_cols + config_cols + [target_col]
+    ]
+
+    # Sort by predicted accuracy
+    if target=="accuracy":
+        X_test = X_test.sort_values(
+            by=target_col,
+            ascending=False
+        )
+    else:
+        X_test = X_test.sort_values(
+            by="compute_time_sec",
+            ascending=True
+        )
+
+    # Save
+    X_test.to_csv(
+        f"outputs/{dataset_name}_{target}_tabpfn_predictions.csv",
+        index=False
+    )
 if __name__ == "__main__":
-    main()
+
+    parser = argparse.ArgumentParser(
+        description="Predict test accuracy using TabPFN"
+    )
+
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        required=True,
+        help="Dataset name for feature extraction"
+    )
+    parser.add_argument(
+        "--target",
+        type=str,
+        required=True,
+        choices=["accuracy","compute"],
+        help="Dataset name for feature extraction"
+    )
+    parser.add_argument(
+        "--data_root",
+        type=str,
+        required=True,
+        help="Dataset name for feature extraction"
+    )
+
+    args = parser.parse_args()
+
+    main(args.dataset, args.data_root, args.target)
