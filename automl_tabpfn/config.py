@@ -1,5 +1,3 @@
-
-
 # Columns to exclude
 exclude_columns = [
     "run_id",

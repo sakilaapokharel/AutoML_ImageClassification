@@ -119,9 +119,7 @@ def build_model(name, num_classes, in_channels=3, img_size=28, resize=0):
     # -------------------------------------------------
     if name == "densenet121":
         if resize or img_size >= 32:
-            m = models.densenet121(
-                weights=models.DenseNet121_Weights.IMAGENET1K_V1
-            )
+            m = models.densenet121(weights=models.DenseNet121_Weights.IMAGENET1K_V1)
 
             m.features.conv0 = adapt_first_conv(m.features.conv0, in_channels)
 
