@@ -1,0 +1,11 @@
+{
+  "accuracy": 0.9617419617419617,
+  "n_train": 5732,
+  "n_test": 2457,
+  "embed_dim": 100,
+  "model": "efficientnet_b0",
+  "n_per_class": -1,
+  "augment": false,
+  "randaug_magnitude": null,
+  "resize_size": 0
+}

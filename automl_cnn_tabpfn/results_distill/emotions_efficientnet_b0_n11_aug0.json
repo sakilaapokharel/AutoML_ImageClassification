@@ -1,0 +1,10 @@
+{
+  "dataset": "emotions",
+  "model": "efficientnet_b0",
+  "n_per_class": 11,
+  "augment": false,
+  "resize_size": 224,
+  "tabpfn_test_acc": 0.26079687935358037,
+  "mlp_test_acc": 0.2534132070214544,
+  "gap": 0.007383672332125946
+}

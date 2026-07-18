@@ -1,0 +1,11 @@
+{
+  "accuracy": 0.2082752855948732,
+  "n_train": 77,
+  "n_test": 7178,
+  "embed_dim": 77,
+  "model": "resnet18",
+  "n_per_class": 11,
+  "augment": false,
+  "randaug_magnitude": null,
+  "resize_size": 224
+}
