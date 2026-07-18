@@ -1,0 +1,9 @@
+{
+  "dataset": "emotions",
+  "model": "resnet18",
+  "n_per_class": 11,
+  "augment": false,
+  "resize_size": 224,
+  "tabpfn_max_train": 2000,
+  "test_accuracy": 0.2177486765115631
+}

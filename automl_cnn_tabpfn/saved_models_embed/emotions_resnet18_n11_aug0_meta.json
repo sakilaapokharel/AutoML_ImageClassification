@@ -1,0 +1,8 @@
+{
+  "model_name": "resnet18",
+  "in_dim": 512,
+  "num_classes": 7,
+  "resize_size": 224,
+  "used_pca": true,
+  "test_accuracy": 0.2177486765115631
+}

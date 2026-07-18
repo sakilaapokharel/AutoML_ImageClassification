@@ -1,0 +1,11 @@
+{
+  "dataset": "flowers",
+  "model": "resnet18",
+  "n_per_class": 11,
+  "augment": true,
+  "resize_size": 224,
+  "tabpfn_max_train": 2000,
+  "tabpfn_test_acc": 0.7912087912087912,
+  "mlp_test_acc": 0.7688237688237688,
+  "gap": 0.02238502238502238
+}

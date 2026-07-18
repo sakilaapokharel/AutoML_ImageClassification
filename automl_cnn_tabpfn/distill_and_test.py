@@ -2,8 +2,11 @@ import argparse
 import json
 from pathlib import Path
 
+import pickle
 import numpy as np
 import torch
+from dotenv import load_dotenv
+load_dotenv()
 
 torch.backends.mps.is_available = lambda: False  # force true CPU, no silent MPS fallback
 
@@ -58,6 +61,7 @@ def main():
         augment=args.augment,
     )
 
+    pca = None
     if args.pca_dim:
         max_components = min(X_train.shape[0], X_train.shape[1])
         effective_dim = min(args.pca_dim, max_components)
@@ -77,8 +81,8 @@ def main():
         X_train_tabpfn, y_train_tabpfn = X_train, y_train
 
     print("Fitting local TabPFN (teacher)...")
-    from tabpfn import TabPFNClassifier
-    clf = TabPFNClassifier(device="mps")
+    from tabpfn_client import TabPFNClassifier
+    clf = TabPFNClassifier()
     clf.fit(X_train_tabpfn, y_train_tabpfn)
 
     # teacher's own performance, for comparison
@@ -105,6 +109,27 @@ def main():
     print(f"Gap (teacher - student):       {tabpfn_test_acc - mlp_test_acc:.4f}")
     print("\nMLP classification report:")
     print(classification_report(y_test, mlp_pred, zero_division=0))
+
+    save_dir = Path("saved_models")
+    save_dir.mkdir(exist_ok=True)
+    tag = f"{args.dataset}_{args.model}_n{args.number_instances}_aug{int(args.augment)}"
+
+    torch.save(mlp.state_dict(), save_dir / f"{tag}_mlp.pt")
+
+    if pca is not None:
+        with open(save_dir / f"{tag}_pca.pkl", "wb") as f:
+            pickle.dump(pca, f)
+
+    with open(save_dir / f"{tag}_meta.json", "w") as f:
+        json.dump({
+            "model_name": args.model,
+            "in_dim": X_train.shape[1],
+            "num_classes": num_classes,
+            "resize_size": args.resize_size,
+            "used_pca": pca is not None,
+        }, f, indent=2)
+
+    print(f"Saved MLP model + metadata to {save_dir}/{tag}_*")
 
     out_dir = Path("results_distill")
     out_dir.mkdir(exist_ok=True)

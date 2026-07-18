@@ -1,0 +1,7 @@
+{
+  "model_name": "resnet18",
+  "in_dim": 77,
+  "num_classes": 7,
+  "resize_size": 224,
+  "used_pca": true
+}

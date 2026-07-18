@@ -81,8 +81,8 @@ def run(
             X_train = pca.fit_transform(X_train)
             X_test = pca.transform(X_test)
 
-    from tabpfn import TabPFNClassifier
-    clf = TabPFNClassifier(device="mps")
+    from tabpfn_client import TabPFNClassifier
+    clf = TabPFNClassifier()
     clf.fit(X_train, y_train)
     y_pred = clf.predict(X_test)
 

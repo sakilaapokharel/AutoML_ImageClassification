@@ -1,0 +1,11 @@
+{
+  "dataset": "emotions",
+  "model": "resnet18",
+  "n_per_class": 11,
+  "augment": false,
+  "resize_size": 224,
+  "tabpfn_max_train": 2000,
+  "tabpfn_test_acc": 0.21092226246865423,
+  "mlp_test_acc": 0.2559208693229312,
+  "gap": -0.04499860685427695
+}
