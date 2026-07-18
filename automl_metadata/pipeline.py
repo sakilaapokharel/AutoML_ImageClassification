@@ -43,8 +43,8 @@ SEARCH_SPACE = {
     ],
     "loss": ["cross_entropy", "label_smoothing", "class_balanced"],
     "resize": [
-        0,        
-        1,  
+        0,
+        1,
     ],
 }
 

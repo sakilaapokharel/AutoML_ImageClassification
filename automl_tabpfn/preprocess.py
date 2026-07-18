@@ -13,23 +13,27 @@ def preprocess(X_train):
         transformers=[
             (
                 "num",
-                Pipeline([
-                    ("imputer", SimpleImputer(strategy="median")),
-                ]),
+                Pipeline(
+                    [
+                        ("imputer", SimpleImputer(strategy="median")),
+                    ]
+                ),
                 numeric_features,
             ),
             (
                 "cat",
-                Pipeline([
-                    ("imputer", SimpleImputer(strategy="most_frequent")),
-                    (
-                        "encoder",
-                        OrdinalEncoder(
-                            handle_unknown="use_encoded_value",
-                            unknown_value=-1,
+                Pipeline(
+                    [
+                        ("imputer", SimpleImputer(strategy="most_frequent")),
+                        (
+                            "encoder",
+                            OrdinalEncoder(
+                                handle_unknown="use_encoded_value",
+                                unknown_value=-1,
+                            ),
                         ),
-                    ),
-                ]),
+                    ]
+                ),
                 categorical_features,
             ),
         ]

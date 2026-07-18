@@ -14,10 +14,9 @@ def get_features_and_target(df: pd.DataFrame, target="accuracy"):
         excluded.append("test_accuracy")
     else:
         raise RuntimeError
-    
+
     feature_columns = [
-        col for col in df.columns
-        if col not in excluded + [target_column]
+        col for col in df.columns if col not in excluded + [target_column]
     ]
 
     X_train = df[feature_columns].copy()

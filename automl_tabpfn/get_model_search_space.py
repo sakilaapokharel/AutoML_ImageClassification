@@ -1,7 +1,6 @@
 from itertools import product
 import pandas as pd
 
-
 MODELS = [
     "scratch_cnn",
     "resnet18",
