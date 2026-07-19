@@ -1,21 +1,19 @@
-from automl import AutoML
-from automl.search import Search
-from automl.config import VISION_SEARCH
-from automl.evaluator import VisionEvaluator
+from model import AutoML
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+print("API key loaded:", os.getenv("TABPFN_API_KEY") is not None)
+
+os.environ["TABPFN_TOKEN"] = os.getenv("TABPFN_API_KEY")
 
 
 automl = AutoML(
-    search=Search(VISION_SEARCH),
-    evaluator=VisionEvaluator(),
-    seed=42,
+    dataset="flowers",
+    fidelity=29,
+    tabpfn_mode="client",
 )
 
 
-automl.fit(
-    FlowersDataset
-)
-
-
-print(
-    automl.get_best_config()
-)
+automl.search_config()

@@ -1,35 +1,72 @@
-from torch.utils.data import DataLoader
+from sklearn.model_selection import train_test_split
+from torch.utils.data import Subset
 
-from .datasets import FlowersDataset, EmotionsDataset
 from .samplers import InstancesPerClassDataset
 
 
-def make_loader(
+def load_train_test(
     dataset_cls,
-    split="train",
+    fidelity=29,
+    seed=42,
     transform=None,
-    batch_size=32,
-    shuffle=True,
-    num_workers=4,
-    instances_per_class=None,
     **dataset_kwargs,
 ):
-    dataset = dataset_cls(
-        split=split,
+
+    train_dataset = dataset_cls(
+        split="train",
         transform=transform,
         **dataset_kwargs,
     )
 
-    if instances_per_class is not None:
-        dataset = InstancesPerClassDataset(
-            dataset,
-            instances_per_class=instances_per_class,
+    # Apply fidelity
+    if fidelity != -1:
+
+        train_dataset = InstancesPerClassDataset(
+            train_dataset,
+            instances_per_class=fidelity,
+            seed=seed,
         )
 
-    return DataLoader(
-        dataset,
-        batch_size=batch_size,
-        shuffle=shuffle,
-        num_workers=num_workers,
-        pin_memory=True,
+    test_dataset = dataset_cls(
+        split="test",
+        transform=transform,
+        **dataset_kwargs,
+    )
+
+    # Test labels unavailable
+    if not _has_labels(test_dataset):
+
+        train_dataset, test_dataset = _split_validation(
+            train_dataset,
+            seed=seed,
+        )
+
+    return train_dataset, test_dataset
+
+
+def _has_labels(dataset):
+
+    labels = getattr(dataset, "_labels", None)
+
+    return labels is not None and all(label is not None for label in labels)
+
+
+def _split_validation(
+    dataset,
+    val_fraction=0.2,
+    seed=42,
+):
+
+    labels = [dataset[i][1] for i in range(len(dataset))]
+
+    train_idx, val_idx = train_test_split(
+        range(len(dataset)),
+        test_size=val_fraction,
+        random_state=seed,
+        stratify=labels,
+    )
+
+    return (
+        Subset(dataset, train_idx),
+        Subset(dataset, val_idx),
     )

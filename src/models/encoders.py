@@ -14,10 +14,10 @@ _ENCODERS = {
         lambda m: m.classifier[1].in_features,
         lambda m: setattr(m, "classifier", nn.Identity()),
     ),
-    "mobilenet_v3_large": (
-        models.mobilenet_v3_large,
-        models.MobileNet_V3_Large_Weights.DEFAULT,
-        lambda m: m.classifier[0].in_features,
+    "mobilenet_v2": (
+        models.mobilenet_v2,
+        models.MobileNet_V2_Weights.DEFAULT,
+        lambda m: m.classifier[1].in_features,
         lambda m: setattr(m, "classifier", nn.Identity()),
     ),
     "densenet121": (

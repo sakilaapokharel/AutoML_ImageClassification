@@ -1,82 +1,51 @@
-from __future__ import annotations
-
-import numpy as np
-
-
-def get_tabpfn_classifier(
-    mode: str = "local",
-    device: str = "cuda",
-    seed: int = 42,
-    n_estimators: int = 1,
-):
-    """
-    Create a TabPFN classifier.
-
-    Parameters
-    ----------
-    mode:
-        "local" or "client"
-
-    device:
-        Device for local TabPFN inference.
-
-    seed:
-        Random seed.
-
-    n_estimators:
-        Number of TabPFN ensemble estimators.
-    """
-
-    if mode == "client":
-        from tabpfn_client import TabPFNClassifier
-
-        model = TabPFNClassifier(
-            random_state=seed,
-            n_estimators=n_estimators,
-        )
-
-    elif mode == "local":
-        from tabpfn import TabPFNClassifier
-
-        model = TabPFNClassifier(
-            device=device,
-            random_state=seed,
-            n_estimators=n_estimators,
-        )
-
-    else:
-        raise ValueError(
-            f"Unknown TabPFN mode '{mode}'. " "Choose 'local' or 'client'."
-        )
-
-    return model
+import torch
 
 
 class TabPFNModel:
 
     def __init__(
         self,
-        mode: str = "local",
-        device: str = "cuda",
-        seed: int = 42,
-        n_estimators: int = 1,
+        mode="local",
+        device="cuda",
+        seed=42,
+        n_estimators=1,
     ):
+
         self.mode = mode
         self.seed = seed
         self.n_estimators = n_estimators
 
-        self.model = get_tabpfn_classifier(
-            mode=mode,
-            device=device,
-            seed=seed,
-            n_estimators=n_estimators,
-        )
+        if mode == "local":
+
+            from tabpfn import TabPFNClassifier
+
+            self.model = TabPFNClassifier(
+                device=device,
+                n_estimators=n_estimators,
+                random_state=seed,
+            )
+
+        elif mode == "client":
+
+            from tabpfn_client import TabPFNClassifier
+
+            self.model = TabPFNClassifier(
+                n_estimators=n_estimators,
+                random_state=seed,
+            )
+
+        else:
+
+            raise ValueError(
+                f"Unknown TabPFN mode '{mode}'. " "Choose 'local' or 'client'."
+            )
 
     def fit(
         self,
-        X_train: np.ndarray,
-        y_train: np.ndarray,
+        X_train,
+        y_train,
     ):
+
         self.model.fit(
             X_train,
             y_train,
@@ -86,12 +55,14 @@ class TabPFNModel:
 
     def predict(
         self,
-        X_test: np.ndarray,
+        X_test,
     ):
+
         return self.model.predict(X_test)
 
     def predict_proba(
         self,
-        X_test: np.ndarray,
+        X_test,
     ):
+
         return self.model.predict_proba(X_test)
