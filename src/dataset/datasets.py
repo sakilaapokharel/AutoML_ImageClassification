@@ -129,7 +129,7 @@ class BaseVisionDataset(VisionDataset):
         image_path = self._base_folder / f"images_{self._split}" / image_file
         image = PIL.Image.open(image_path)
         if self.channels == 1:
-            image = image.convert("L")
+            image = image.convert("RGB")
         elif self.channels == 3:
             image = image.convert("RGB")
         else:

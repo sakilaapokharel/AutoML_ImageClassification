@@ -31,9 +31,18 @@ class Evaluator:
         config,
     ):
 
-        resize = config["resize"]
+        base = []
 
-        base = [transforms.Resize((resize, resize))]
+        if config["resize"] is not None:
+
+            base.append(
+                transforms.Resize(
+                    (
+                        config["resize"],
+                        config["resize"],
+                    )
+                )
+            )
 
         if config["augmentation"] == "randaugment":
 

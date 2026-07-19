@@ -71,7 +71,7 @@ def main():
         tabpfn_mode=tabpfn_mode,
     )
 
-    best_config = automl.search_config()
+    best_config = automl.successive_halving()
 
 
 if __name__ == "__main__":

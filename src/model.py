@@ -6,6 +6,7 @@ from automl.results import Results
 import time
 from automl.config import SEARCH_SPACE
 from automl.cache import EmbeddingCache
+from automl.config import SUCCESSIVE_HALVING_FIDELITIES, SUCCESSIVE_HALVING_REDUCTION
 
 
 class AutoML:
@@ -30,7 +31,11 @@ class AutoML:
         self.fidelity = fidelity
         self.seed = seed
 
-        self.search = Search(config_space=SEARCH_SPACE)
+        self.search = Search(
+            SEARCH_SPACE,
+            fidelity=fidelity,
+            dataset_cls=self.dataset_cls,
+        )
         self.tabpfn_mode = tabpfn_mode
 
         self.cache = EmbeddingCache()
@@ -68,62 +73,199 @@ class AutoML:
 
         return train_dataset, test_dataset
 
-    def search_config(self):
+    def successive_halving(self):
 
-        train_dataset, test_dataset = self._load_datasets()
+        self._load_datasets()
 
-        total = self.search.size()
+        configs = list(self.search)
 
         try:
 
-            for idx, config in enumerate(
-                self.search,
-                start=1,
-            ):
+            for fidelity in SUCCESSIVE_HALVING_FIDELITIES:
 
-                print("\n" + "=" * 60)
-                print(f"Configuration {idx}/{total}")
-                print(config)
-                print("=" * 60)
+                print("\n" + "=" * 80)
+                print("Successive Halving Stage")
+                print("=" * 80)
 
-                start = time.time()
+                print(f"Fidelity               : {fidelity}")
 
-                score = self.evaluator.evaluate(
-                    self.dataset_cls,
-                    config,
-                    self.fidelity,
-                    seed=self.seed,
-                    tabpfn_mode=self.tabpfn_mode,
+                print(f"Incoming configurations: {len(configs)}")
+
+                print("=" * 80)
+
+                stage_results = []
+
+                for idx, config in enumerate(
+                    configs,
+                    start=1,
+                ):
+
+                    print("\n" + "-" * 70)
+                    print(f"Running configuration {idx}/{len(configs)}")
+
+                    print(config)
+
+                    print("-" * 70)
+
+                    start = time.time()
+
+                    score = self.evaluator.evaluate(
+                        self.dataset_cls,
+                        config,
+                        fidelity=fidelity,
+                        seed=self.seed,
+                        tabpfn_mode=self.tabpfn_mode,
+                    )
+
+                    compute_time = time.time() - start
+
+                    train_samples = fidelity * self.dataset_cls.num_classes
+
+                    if config["augmentation"] == "randaugment":
+                        train_samples *= 2
+
+                    test_samples = len(
+                        self.dataset_cls(
+                            split="test",
+                            download=False,
+                        )
+                    )
+
+                    self.results.add(
+                        fidelity=fidelity,
+                        config=config,
+                        score=score,
+                        train_samples=train_samples,
+                        test_samples=test_samples,
+                        compute_time=compute_time,
+                    )
+
+                    stage_results.append(
+                        (
+                            score,
+                            config,
+                        )
+                    )
+
+                    print(f"Finished configuration {idx}")
+
+                    print(f"Accuracy : {score:.4f}")
+
+                    print(f"Time     : {compute_time:.2f}s")
+
+                # -----------------------------
+                # Rank configurations
+                # -----------------------------
+
+                stage_results.sort(
+                    key=lambda x: x[0],
+                    reverse=True,
                 )
 
-                compute_time = time.time() - start
+                print("\n" + "=" * 80)
+                print("Stage Ranking")
+                print("=" * 80)
 
+                for rank, (score, config) in enumerate(
+                    stage_results,
+                    start=1,
+                ):
 
-                self.results.add(
-                    config=config,
-                    score=score,
-                    train_samples=len(train_dataset),
-                    test_samples=len(test_dataset),
-                    compute_time=compute_time,
+                    print(f"{rank}. " f"Score={score:.4f}")
+
+                    print(config)
+
+                    print()
+
+                # -----------------------------
+                # Successive Halving
+                # -----------------------------
+
+                keep = max(
+                    1,
+                    len(stage_results) // SUCCESSIVE_HALVING_REDUCTION,
                 )
 
+                survivors = stage_results[:keep]
+
+                configs = [config for _, config in survivors]
+
+                print("\n" + "=" * 80)
+                print("Successive Halving Selection")
+                print("=" * 80)
+
+                print(f"Evaluated configurations : {len(stage_results)}")
+
+                print(f"Keeping configurations  : {keep}")
+
+                print("\nSurvivors:")
+
+                for rank, (score, config) in enumerate(
+                    survivors,
+                    start=1,
+                ):
+
+                    print("\n" + "-" * 50)
+
+                    print(f"Rank {rank}")
+
+                    print(f"Score: {score:.4f}")
+
+                    print("Config:")
+
+                    print(config)
+
+                print("\n" + "=" * 80)
+
+                self.results.save_stage(
+                    fidelity=fidelity,
+                )
+
+                print("\nStage completed")
+
+                if len(configs) == 1:
+
+                    print("Only one configuration remains.")
+
+                    break
+
+        except Exception as e:
+
+            print("\nSearch failed:")
+
+            print(e)
+
+            raise
 
         finally:
 
-            print("\nCleaning cache...")
+            print("\nCleaning embedding cache...")
+
             self.evaluator.cache.clear()
 
+        # -----------------------------
+        # Final best config
+        # -----------------------------
 
-        best_config = self.results.best()
+        best_score, best_config = self.results.best()
 
-        print("\n" + "=" * 60)
-        print("Best Configuration")
-        print("=" * 60)
+        self.results.save_best(
+            best_score,
+            best_config,
+        )
+
+        print("\n" + "=" * 80)
+        print("Search Finished")
+        print("=" * 80)
+
+        print(f"Best Score : {best_score:.4f}")
+
+        print("Best Config:")
 
         print(best_config)
 
+        return best_score, best_config
 
-        return best_config
-    
     def distill_and_train(self):
-        best_score, best_config = self.search_config()
+        # best_score, best_config = self.search_config()
+        pass
