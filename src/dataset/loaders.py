@@ -2,6 +2,7 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import Subset
 
 from .samplers import InstancesPerClassDataset
+from torch.utils.data import Dataset
 
 
 def load_train_test(
@@ -70,3 +71,26 @@ def _split_validation(
         Subset(dataset, train_idx),
         Subset(dataset, val_idx),
     )
+
+
+class TransformDataset(Dataset):
+
+    def __init__(
+        self,
+        dataset,
+        transform,
+    ):
+        self.dataset = dataset
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, idx):
+
+        image, label = self.dataset[idx]
+
+        if self.transform:
+            image = self.transform(image)
+
+        return image, label

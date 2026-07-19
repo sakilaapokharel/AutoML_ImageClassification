@@ -5,26 +5,35 @@ from torch.utils.data import DataLoader, ConcatDataset
 from torchvision import transforms
 
 from dataset.samplers import InstancesPerClassDataset
+from dataset.loaders import TransformDataset
 
 from models.encoders import get_encoder
 from models.tabpfn import TabPFNModel
+from models.reducers import PCAReducer
+
+from automl.cache import EmbeddingCache
 
 from automl.utils import (
     print_header,
     print_step,
     print_progress,
 )
-from models.reducers import PCAReducer
 
 
 class Evaluator:
+
+    def __init__(self):
+
+        self.cache = EmbeddingCache()
 
     def _get_transform(
         self,
         config,
     ):
 
-        base = [transforms.Resize((config["resize"], config["resize"]))]
+        resize = config["resize"]
+
+        base = [transforms.Resize((resize, resize))]
 
         if config["augmentation"] == "randaugment":
 
@@ -32,13 +41,6 @@ class Evaluator:
                 base
                 + [
                     transforms.RandAugment(),
-                    transforms.ToTensor(),
-                ]
-            )
-
-            original_transform = transforms.Compose(
-                base
-                + [
                     transforms.ToTensor(),
                 ]
             )
@@ -52,7 +54,12 @@ class Evaluator:
                 ]
             )
 
-            original_transform = train_transform
+        original_transform = transforms.Compose(
+            base
+            + [
+                transforms.ToTensor(),
+            ]
+        )
 
         test_transform = transforms.Compose(
             base
@@ -81,51 +88,71 @@ class Evaluator:
             test_transform,
         ) = self._get_transform(config)
 
-        train_dataset = dataset_cls(
+        print_step("Loading raw training dataset")
+
+        raw_train = dataset_cls(
             split="train",
-            transform=original_transform,
+            transform=None,
             download=False,
         )
 
+        #
+        # Fidelity selection
+        #
         if fidelity != -1:
 
-            train_dataset = InstancesPerClassDataset(
-                train_dataset,
+            sampled_train = InstancesPerClassDataset(
+                raw_train,
                 instances_per_class=fidelity,
                 seed=seed,
             )
 
-        # Add augmented copy
+        else:
+
+            sampled_train = raw_train
+
+        #
+        # Original images
+        #
+        original_dataset = TransformDataset(
+            sampled_train,
+            original_transform,
+        )
+
+        #
+        # Original + RandAugment
+        #
         if config["augmentation"] == "randaugment":
 
-            aug_dataset = dataset_cls(
-                split="train",
-                transform=train_transform,
-                download=False,
+            augmented_dataset = TransformDataset(
+                sampled_train,
+                train_transform,
             )
-
-            if fidelity != -1:
-
-                aug_dataset = InstancesPerClassDataset(
-                    aug_dataset,
-                    instances_per_class=fidelity,
-                    seed=seed,
-                )
 
             train_dataset = ConcatDataset(
                 [
-                    train_dataset,
-                    aug_dataset,
+                    original_dataset,
+                    augmented_dataset,
                 ]
             )
 
+        else:
+
+            train_dataset = original_dataset
+
+        #
+        # Test
+        #
         test_dataset = dataset_cls(
             split="test",
             transform=test_transform,
             download=False,
         )
 
-        return train_dataset, test_dataset
+        return (
+            train_dataset,
+            test_dataset,
+        )
 
     def _embed(
         self,
@@ -137,6 +164,7 @@ class Evaluator:
             dataset,
             batch_size=64,
             shuffle=False,
+            pin_memory=True,
         )
 
         embeddings = []
@@ -170,11 +198,16 @@ class Evaluator:
             np.concatenate(labels),
         )
 
-    def evaluate(self, dataset_cls, config, fidelity, seed=42, tabpfn_mode="local"):
+    def evaluate(
+        self,
+        dataset_cls,
+        config,
+        fidelity,
+        seed=42,
+        tabpfn_mode="local",
+    ):
 
         print_header(f"Encoder: {config['encoder']}")
-
-        print_step("Loading datasets")
 
         train_dataset, test_dataset = self._load_datasets(
             dataset_cls,
@@ -187,28 +220,75 @@ class Evaluator:
 
         print(f"Test samples: {len(test_dataset)}")
 
-        print_step("Loading encoder")
+        transform_name = f"resize_{config['resize']}_" f"{config['augmentation']}"
 
-        encoder, embedding_dim = get_encoder(config["encoder"])
+        #
+        # CNN CACHE
+        #
+        if self.cache.exists(
+            dataset_cls._dataset_name,
+            fidelity,
+            config["encoder"],
+            transform_name,
+            seed,
+        ):
 
-        encoder.eval()
-        encoder.cuda()
+            print_step("Loading cached embeddings")
 
-        print_step("Embedding train data")
+            (
+                X_train,
+                y_train,
+                X_test,
+                y_test,
+            ) = self.cache.load(
+                dataset_cls._dataset_name,
+                fidelity,
+                config["encoder"],
+                transform_name,
+                seed,
+            )
 
-        X_train, y_train = self._embed(
-            encoder,
-            train_dataset,
-        )
+        else:
 
-        print_step("Embedding test data")
+            print_step("Loading encoder")
 
-        X_test, y_test = self._embed(
-            encoder,
-            test_dataset,
-        )
+            encoder, embedding_dim = get_encoder(config["encoder"])
 
-        print_step("Reducing Dimensions")
+            encoder.eval()
+            encoder.cuda()
+
+            print_step("Embedding train data")
+
+            X_train, y_train = self._embed(
+                encoder,
+                train_dataset,
+            )
+
+            print_step("Embedding test data")
+
+            X_test, y_test = self._embed(
+                encoder,
+                test_dataset,
+            )
+
+            print_step("Saving embeddings")
+
+            self.cache.save(
+                dataset_cls._dataset_name,
+                fidelity,
+                config["encoder"],
+                transform_name,
+                seed,
+                X_train,
+                y_train,
+                X_test,
+                y_test,
+            )
+
+        #
+        # PCA
+        #
+        print_step("Reducing dimensions")
 
         reducer = PCAReducer(
             config["embedding_dim"],
@@ -219,6 +299,9 @@ class Evaluator:
 
         X_test = reducer.transform(X_test)
 
+        #
+        # TabPFN
+        #
         print_step("Training TabPFN")
 
         model = TabPFNModel(

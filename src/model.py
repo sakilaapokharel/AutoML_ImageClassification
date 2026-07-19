@@ -5,6 +5,7 @@ from automl.evaluator import Evaluator
 from automl.results import Results
 import time
 from automl.config import SEARCH_SPACE
+from automl.cache import EmbeddingCache
 
 
 class AutoML:
@@ -31,6 +32,8 @@ class AutoML:
 
         self.search = Search(config_space=SEARCH_SPACE)
         self.tabpfn_mode = tabpfn_mode
+
+        self.cache = EmbeddingCache()
 
         self.evaluator = Evaluator()
         self.results = Results(
@@ -71,40 +74,56 @@ class AutoML:
 
         total = self.search.size()
 
-        for idx, config in enumerate(
-            self.search,
-            start=1,
-        ):
+        try:
 
-            print("\n" + "=" * 60)
-            print(f"Configuration {idx}/{total}")
-            print(config)
-            print("=" * 60)
+            for idx, config in enumerate(
+                self.search,
+                start=1,
+            ):
 
-            start = time.time()
+                print("\n" + "=" * 60)
+                print(f"Configuration {idx}/{total}")
+                print(config)
+                print("=" * 60)
 
-            score = self.evaluator.evaluate(
-                self.dataset_cls,
-                config,
-                self.fidelity,
-                seed=self.seed,
-                tabpfn_mode=self.tabpfn_mode,
-            )
+                start = time.time()
 
-            compute_time = time.time() - start
+                score = self.evaluator.evaluate(
+                    self.dataset_cls,
+                    config,
+                    self.fidelity,
+                    seed=self.seed,
+                    tabpfn_mode=self.tabpfn_mode,
+                )
 
-            if config["augmentation"] == "randaugment":
-                train_samples = len(train_dataset) * 2
-            else:
-                train_samples = len(train_dataset)
-                test_samples = len(test_dataset)
+                compute_time = time.time() - start
 
-            self.results.add(
-                config=config,
-                score=score,
-                train_samples=train_samples,
-                test_samples=test_samples,
-                compute_time=compute_time,
-            )
 
-        return self
+                self.results.add(
+                    config=config,
+                    score=score,
+                    train_samples=len(train_dataset),
+                    test_samples=len(test_dataset),
+                    compute_time=compute_time,
+                )
+
+
+        finally:
+
+            print("\nCleaning cache...")
+            self.evaluator.cache.clear()
+
+
+        best_config = self.results.best()
+
+        print("\n" + "=" * 60)
+        print("Best Configuration")
+        print("=" * 60)
+
+        print(best_config)
+
+
+        return best_config
+    
+    def distill_and_train(self):
+        best_score, best_config = self.search_config()
