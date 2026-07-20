@@ -1,0 +1,12 @@
+{
+    "dataset": "fashion",
+    "tabpfn_mode": "local",
+    "seed": 42,
+    "best_accuracy": 0.8075,
+    "best_config": {
+        "encoder": "efficientnet_b0",
+        "embedding_dim": null,
+        "resize": 224,
+        "augmentation": "randaugment"
+    }
+}

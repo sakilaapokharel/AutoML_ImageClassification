@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 
 
 class TabPFNModel:
@@ -56,13 +57,58 @@ class TabPFNModel:
     def predict(
         self,
         X_test,
+        batch_size=100,
     ):
 
-        return self.model.predict(X_test)
+        if len(X_test) <= batch_size:
+            return self.model.predict(X_test)
 
+        print(
+            f"TabPFN predict split into "
+            f"{(len(X_test)+batch_size-1)//batch_size} batches"
+        )
+
+        predictions = []
+
+        for start in range(0, len(X_test), batch_size):
+
+            end = min(start + batch_size, len(X_test))
+
+            print(f"Predicting {start}:{end}")
+
+            pred = self.model.predict(
+                X_test[start:end]
+            )
+
+            predictions.append(pred)
+
+        return np.concatenate(predictions)
     def predict_proba(
         self,
         X_test,
+        batch_size=100,
     ):
 
-        return self.model.predict_proba(X_test)
+        if len(X_test) <= batch_size:
+            return self.model.predict_proba(X_test)
+
+        print(
+            f"TabPFN predict_proba split into "
+            f"{(len(X_test)+batch_size-1)//batch_size} batches"
+        )
+
+        probabilities = []
+
+        for start in range(0, len(X_test), batch_size):
+
+            end = min(start + batch_size, len(X_test))
+
+            print(f"Predicting probabilities {start}:{end}")
+
+            probs = self.model.predict_proba(
+                X_test[start:end]
+            )
+
+            probabilities.append(probs)
+
+        return np.vstack(probabilities)

@@ -6,9 +6,7 @@ SEARCH_SPACE = {
         "densenet121",
     ],
     "embedding_dim": [
-        32,
-        64,
-        128,
+        # 128,
         None,
     ],
     "resize": [224, None],
@@ -19,12 +17,12 @@ SEARCH_SPACE = {
 }
 
 SUCCESSIVE_HALVING_FIDELITIES = [
-    29,
-    56,
-    111,
-    299,
-    388,
+    11,
+    # 12,
+    # 56,
+    # 111,
+    # 299,
 ]
 
 
-SUCCESSIVE_HALVING_REDUCTION = 2
+SUCCESSIVE_HALVING_REDUCTION = 8

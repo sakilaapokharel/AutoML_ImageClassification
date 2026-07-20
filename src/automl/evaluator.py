@@ -19,12 +19,16 @@ from automl.utils import (
     print_progress,
 )
 
+IMAGENET_MEAN = [0.485, 0.456, 0.406]
+IMAGENET_STD = [0.229, 0.224, 0.225]
+
 
 class Evaluator:
 
-    def __init__(self):
+    def __init__(self, tabpfn_model):
 
         self.cache = EmbeddingCache()
+        self.tabpfn_model = tabpfn_model
 
     def _get_transform(
         self,
@@ -49,8 +53,9 @@ class Evaluator:
             train_transform = transforms.Compose(
                 base
                 + [
-                    transforms.RandAugment(),
+                    transforms.RandAugment(num_ops=2, magnitude=5),
                     transforms.ToTensor(),
+                    transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
                 ]
             )
 
@@ -60,6 +65,7 @@ class Evaluator:
                 base
                 + [
                     transforms.ToTensor(),
+                    transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
                 ]
             )
 
@@ -67,6 +73,7 @@ class Evaluator:
             base
             + [
                 transforms.ToTensor(),
+                transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
             ]
         )
 
@@ -74,6 +81,7 @@ class Evaluator:
             base
             + [
                 transforms.ToTensor(),
+                transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
             ]
         )
 
@@ -82,6 +90,7 @@ class Evaluator:
             train_transform,
             test_transform,
         )
+
 
     def _load_datasets(
         self,
@@ -213,7 +222,6 @@ class Evaluator:
         config,
         fidelity,
         seed=42,
-        tabpfn_mode="local",
     ):
 
         print_header(f"Encoder: {config['encoder']}")
@@ -229,42 +237,39 @@ class Evaluator:
 
         print(f"Test samples: {len(test_dataset)}")
 
-        transform_name = f"resize_{config['resize']}_" f"{config['augmentation']}"
+        dataset_name = dataset_cls._dataset_name
 
-        #
-        # CNN CACHE
-        #
-        if self.cache.exists(
-            dataset_cls._dataset_name,
+        train_transform_name = f"resize_{config['resize']}_" f"{config['augmentation']}"
+
+        test_transform_name = f"resize_{config['resize']}"
+
+        encoder, embedding = get_encoder(config["encoder"])
+        encoder.eval()
+        encoder.cuda()
+
+        # ==================================================
+        # TRAIN EMBEDDINGS
+        # ==================================================
+
+        if self.cache.train_exists(
+            dataset_name,
             fidelity,
             config["encoder"],
-            transform_name,
+            train_transform_name,
             seed,
         ):
 
-            print_step("Loading cached embeddings")
+            print_step("Loading cached train embeddings")
 
-            (
-                X_train,
-                y_train,
-                X_test,
-                y_test,
-            ) = self.cache.load(
-                dataset_cls._dataset_name,
+            X_train, y_train = self.cache.load_train(
+                dataset_name,
                 fidelity,
                 config["encoder"],
-                transform_name,
+                train_transform_name,
                 seed,
             )
 
         else:
-
-            print_step("Loading encoder")
-
-            encoder, embedding_dim = get_encoder(config["encoder"])
-
-            encoder.eval()
-            encoder.cuda()
 
             print_step("Embedding train data")
 
@@ -273,6 +278,38 @@ class Evaluator:
                 train_dataset,
             )
 
+            self.cache.save_train(
+                dataset_name,
+                fidelity,
+                config["encoder"],
+                train_transform_name,
+                seed,
+                X_train,
+                y_train,
+            )
+
+        # ==================================================
+        # TEST EMBEDDINGS
+        # ==================================================
+
+        if self.cache.test_exists(
+            dataset_name,
+            config["encoder"],
+            test_transform_name,
+            seed,
+        ):
+
+            print_step("Loading cached test embeddings")
+
+            X_test, y_test = self.cache.load_test(
+                dataset_name,
+                config["encoder"],
+                test_transform_name,
+                seed,
+            )
+
+        else:
+
             print_step("Embedding test data")
 
             X_test, y_test = self._embed(
@@ -280,23 +317,19 @@ class Evaluator:
                 test_dataset,
             )
 
-            print_step("Saving embeddings")
-
-            self.cache.save(
-                dataset_cls._dataset_name,
-                fidelity,
+            self.cache.save_test(
+                dataset_name,
                 config["encoder"],
-                transform_name,
+                test_transform_name,
                 seed,
-                X_train,
-                y_train,
                 X_test,
                 y_test,
             )
 
-        #
+        # ==================================================
         # PCA
-        #
+        # ==================================================
+
         print_step("Reducing dimensions")
 
         reducer = PCAReducer(
@@ -308,25 +341,20 @@ class Evaluator:
 
         X_test = reducer.transform(X_test)
 
-        #
+        # ==================================================
         # TabPFN
-        #
+        # ==================================================
+
         print_step("Training TabPFN")
 
-        model = TabPFNModel(
-            mode=tabpfn_mode,
-            seed=seed,
-            n_estimators=1,
-        )
-
-        model.fit(
+        self.tabpfn_model.fit(
             X_train,
             y_train,
         )
 
         print_step("Evaluating")
 
-        predictions = model.predict(X_test)
+        predictions = self.tabpfn_model.predict(X_test)
 
         score = np.mean(predictions == y_test)
 

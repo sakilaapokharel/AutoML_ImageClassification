@@ -1,0 +1,216 @@
+{
+    "dataset": "skin_cancer_test",
+    "tabpfn_mode": "client",
+    "seed": 42,
+    "fidelity": 11,
+    "results": [
+        {
+            "fidelity": 11,
+            "config": {
+                "encoder": "resnet18",
+                "embedding_dim": null,
+                "resize": 224,
+                "augmentation": "none"
+            },
+            "accuracy": 0.44900142653352354,
+            "train_samples": 77,
+            "test_samples": 2804,
+            "compute_time": 55.361
+        },
+        {
+            "fidelity": 11,
+            "config": {
+                "encoder": "resnet18",
+                "embedding_dim": null,
+                "resize": 224,
+                "augmentation": "randaugment"
+            },
+            "accuracy": 0.4122681883024251,
+            "train_samples": 154,
+            "test_samples": 2804,
+            "compute_time": 15.34
+        },
+        {
+            "fidelity": 11,
+            "config": {
+                "encoder": "resnet18",
+                "embedding_dim": null,
+                "resize": null,
+                "augmentation": "none"
+            },
+            "accuracy": 0.46790299572039945,
+            "train_samples": 77,
+            "test_samples": 2804,
+            "compute_time": 36.19
+        },
+        {
+            "fidelity": 11,
+            "config": {
+                "encoder": "resnet18",
+                "embedding_dim": null,
+                "resize": null,
+                "augmentation": "randaugment"
+            },
+            "accuracy": 0.42938659058487877,
+            "train_samples": 154,
+            "test_samples": 2804,
+            "compute_time": 15.204
+        },
+        {
+            "fidelity": 11,
+            "config": {
+                "encoder": "efficientnet_b0",
+                "embedding_dim": null,
+                "resize": 224,
+                "augmentation": "none"
+            },
+            "accuracy": 0.44436519258202567,
+            "train_samples": 77,
+            "test_samples": 2804,
+            "compute_time": 37.288
+        },
+        {
+            "fidelity": 11,
+            "config": {
+                "encoder": "efficientnet_b0",
+                "embedding_dim": null,
+                "resize": 224,
+                "augmentation": "randaugment"
+            },
+            "accuracy": 0.43152639087018546,
+            "train_samples": 154,
+            "test_samples": 2804,
+            "compute_time": 30.933
+        },
+        {
+            "fidelity": 11,
+            "config": {
+                "encoder": "efficientnet_b0",
+                "embedding_dim": null,
+                "resize": null,
+                "augmentation": "none"
+            },
+            "accuracy": 0.4297432239657632,
+            "train_samples": 77,
+            "test_samples": 2804,
+            "compute_time": 46.957
+        },
+        {
+            "fidelity": 11,
+            "config": {
+                "encoder": "efficientnet_b0",
+                "embedding_dim": null,
+                "resize": null,
+                "augmentation": "randaugment"
+            },
+            "accuracy": 0.4222539229671897,
+            "train_samples": 154,
+            "test_samples": 2804,
+            "compute_time": 24.065
+        },
+        {
+            "fidelity": 11,
+            "config": {
+                "encoder": "mobilenet_v2",
+                "embedding_dim": null,
+                "resize": 224,
+                "augmentation": "none"
+            },
+            "accuracy": 0.4304564907275321,
+            "train_samples": 77,
+            "test_samples": 2804,
+            "compute_time": 32.391
+        },
+        {
+            "fidelity": 11,
+            "config": {
+                "encoder": "mobilenet_v2",
+                "embedding_dim": null,
+                "resize": 224,
+                "augmentation": "randaugment"
+            },
+            "accuracy": 0.46968616262482166,
+            "train_samples": 154,
+            "test_samples": 2804,
+            "compute_time": 27.142
+        },
+        {
+            "fidelity": 11,
+            "config": {
+                "encoder": "mobilenet_v2",
+                "embedding_dim": null,
+                "resize": null,
+                "augmentation": "none"
+            },
+            "accuracy": 0.43366619115549215,
+            "train_samples": 77,
+            "test_samples": 2804,
+            "compute_time": 44.618
+        },
+        {
+            "fidelity": 11,
+            "config": {
+                "encoder": "mobilenet_v2",
+                "embedding_dim": null,
+                "resize": null,
+                "augmentation": "randaugment"
+            },
+            "accuracy": 0.41833095577746077,
+            "train_samples": 154,
+            "test_samples": 2804,
+            "compute_time": 25.583
+        },
+        {
+            "fidelity": 11,
+            "config": {
+                "encoder": "densenet121",
+                "embedding_dim": null,
+                "resize": 224,
+                "augmentation": "none"
+            },
+            "accuracy": 0.42796005706134094,
+            "train_samples": 77,
+            "test_samples": 2804,
+            "compute_time": 36.75
+        },
+        {
+            "fidelity": 11,
+            "config": {
+                "encoder": "densenet121",
+                "embedding_dim": null,
+                "resize": 224,
+                "augmentation": "randaugment"
+            },
+            "accuracy": 0.41833095577746077,
+            "train_samples": 154,
+            "test_samples": 2804,
+            "compute_time": 23.654
+        },
+        {
+            "fidelity": 11,
+            "config": {
+                "encoder": "densenet121",
+                "embedding_dim": null,
+                "resize": null,
+                "augmentation": "none"
+            },
+            "accuracy": 0.4325962910128388,
+            "train_samples": 77,
+            "test_samples": 2804,
+            "compute_time": 59.912
+        },
+        {
+            "fidelity": 11,
+            "config": {
+                "encoder": "densenet121",
+                "embedding_dim": null,
+                "resize": null,
+                "augmentation": "randaugment"
+            },
+            "accuracy": 0.4108416547788873,
+            "train_samples": 154,
+            "test_samples": 2804,
+            "compute_time": 26.459
+        }
+    ]
+}

@@ -7,16 +7,19 @@ import time
 from automl.config import SEARCH_SPACE
 from automl.cache import EmbeddingCache
 from automl.config import SUCCESSIVE_HALVING_FIDELITIES, SUCCESSIVE_HALVING_REDUCTION
-
+from trainer.distill import Distiller
+from models.tabpfn import TabPFNModel
 
 class AutoML:
 
     def __init__(
         self,
         dataset: str,
-        fidelity: int = 29,
+        fidelity: int = 56,
+        train_fidelity: int = 500,
         seed: int = 42,
         tabpfn_mode: str = "local",
+        tabpfn_estimators: int= 1,
     ):
         self.DATASETS = DATASETS
         if dataset not in self.DATASETS:
@@ -36,16 +39,23 @@ class AutoML:
             fidelity=fidelity,
             dataset_cls=self.dataset_cls,
         )
+        self.tabpfn_model = TabPFNModel(
+            mode=tabpfn_mode,
+            seed=seed,
+            n_estimators=tabpfn_estimators,
+        )
         self.tabpfn_mode = tabpfn_mode
 
         self.cache = EmbeddingCache()
 
-        self.evaluator = Evaluator()
+        self.evaluator = Evaluator(tabpfn_model = self.tabpfn_model)
         self.results = Results(
             dataset_name=self.dataset_name,
             tabpfn_mode=self.tabpfn_mode,
             seed=self.seed,
         )
+        self.train_fidelity = train_fidelity
+        self.distiller = Distiller(fidelity=self.train_fidelity, seed=self.seed, tabpfn_model=self.tabpfn_model)
 
     def _load_datasets(self):
 
@@ -114,7 +124,6 @@ class AutoML:
                         config,
                         fidelity=fidelity,
                         seed=self.seed,
-                        tabpfn_mode=self.tabpfn_mode,
                     )
 
                     compute_time = time.time() - start
@@ -266,6 +275,50 @@ class AutoML:
 
         return best_score, best_config
 
-    def distill_and_train(self):
-        # best_score, best_config = self.search_config()
-        pass
+    def distill(
+        self,
+        best_config,
+    ):
+        """
+        Train final student model using selected configuration.
+
+        config example:
+
+        {
+            "encoder": "mobilenet_v2",
+            "embedding_dim": 64,
+            "resize": 224,
+            "augmentation": "randaugment"
+        }
+
+        """
+        if best_config==None:
+            best_score, best_config = self.successive_halving()
+
+        print("\n" + "=" * 70)
+        print("Starting Distillation")
+        print("=" * 70)
+
+        print("Dataset:")
+        print(self.dataset_name)
+
+        print("Config:")
+        print(best_config)
+
+        result = self.distiller.fit(
+            dataset_cls=self.dataset_cls,
+            config=best_config,
+            seed=self.seed,
+        )
+
+        checkpoint_path = result["checkpoint"]
+
+        print(checkpoint_path)
+
+        print("\n" + "=" * 70)
+        print("Distillation Finished")
+        print("=" * 70)
+
+        print("Checkpoint:", result["checkpoint"])
+
+        return result

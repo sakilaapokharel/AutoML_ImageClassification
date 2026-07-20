@@ -19,6 +19,7 @@ def main():
             "emotions",
             "fashion",
             "skin_cancer",
+            "skin_cancer_test"
         ],
         help="Dataset to run AutoML on",
     )
@@ -26,7 +27,14 @@ def main():
     parser.add_argument(
         "--fidelity",
         type=int,
-        default=29,
+        default=56,
+        help=("Number of instances per class. " "Use -1 for all samples."),
+    )
+
+    parser.add_argument(
+        "--train_fidelity",
+        type=int,
+        default=500,
         help=("Number of instances per class. " "Use -1 for all samples."),
     )
 
@@ -69,9 +77,22 @@ def main():
         fidelity=args.fidelity,
         seed=args.seed,
         tabpfn_mode=tabpfn_mode,
+        train_fidelity=args.train_fidelity,
+    )
+    # config = {'encoder': 'efficientnet_b0', 'embedding_dim': None, 'resize': 224, 'augmentation': 'none'}
+    # config= {"encoder": "densenet121", "embedding_dim": None, "resize": 224, "augmentation": "none"}
+    best_config = {
+        "encoder": "mobilenet_v2",
+        "embedding_dim": None,
+        "resize": 224,
+        "augmentation": "randaugment"
+    }
+    student = automl.distill(
+        best_config=best_config,
     )
 
-    best_config = automl.successive_halving()
+    # best_config = automl.successive_halving()
+    # print(best_config)
 
 
 if __name__ == "__main__":

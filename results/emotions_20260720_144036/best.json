@@ -1,0 +1,12 @@
+{
+    "dataset": "emotions",
+    "tabpfn_mode": "client",
+    "seed": 42,
+    "best_accuracy": 0.312482585678462,
+    "best_config": {
+        "encoder": "densenet121",
+        "embedding_dim": null,
+        "resize": 224,
+        "augmentation": "none"
+    }
+}

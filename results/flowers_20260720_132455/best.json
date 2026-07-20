@@ -1,0 +1,12 @@
+{
+    "dataset": "flowers",
+    "tabpfn_mode": "local",
+    "seed": 42,
+    "best_accuracy": 0.9259259259259259,
+    "best_config": {
+        "encoder": "efficientnet_b0",
+        "embedding_dim": null,
+        "resize": null,
+        "augmentation": "randaugment"
+    }
+}

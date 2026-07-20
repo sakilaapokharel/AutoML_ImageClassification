@@ -3,6 +3,7 @@ from dataset.datasets import (
     EmotionsDataset,
     FashionDataset,
     SkinCancerDataset,
+    SkinCancer_Test_Dataset,
 )
 
 DATASETS = {
@@ -10,4 +11,5 @@ DATASETS = {
     "emotions": EmotionsDataset,
     "fashion": FashionDataset,
     "skin_cancer": SkinCancerDataset,
+    "skin_cancer_test":SkinCancer_Test_Dataset
 }

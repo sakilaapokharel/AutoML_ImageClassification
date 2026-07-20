@@ -202,3 +202,20 @@ class SkinCancerDataset(BaseVisionDataset):
     height = 450
     channels = 3
     num_classes = 7
+
+
+class SkinCancer_Test_Dataset(BaseVisionDataset):
+    """SkinCancer Dataset.
+
+    The SkinCancer dataset contains images of skin lesions. The task is to classify what kind of skin lesion it is.
+
+    This is the test dataset for the AutoML exam. It does not contain the labels for the test split.
+    You are expected to predict these labels and save them to a file called `final_test_preds.npy` for your
+    final submission.
+    """
+
+    _dataset_name = "skin_cancer_test"
+    width = 450
+    height = 450
+    channels = 3
+    num_classes = 7

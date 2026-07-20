@@ -4,3 +4,4 @@ metadatas/
 __pycache__/
 *.env
 .vscode
+checkpoints/
