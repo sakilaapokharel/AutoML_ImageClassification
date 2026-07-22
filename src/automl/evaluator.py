@@ -17,6 +17,7 @@ from automl.utils import (
     print_header,
     print_step,
     print_progress,
+    ResizeToMultipleOf14
 )
 
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
@@ -25,10 +26,11 @@ IMAGENET_STD = [0.229, 0.224, 0.225]
 
 class Evaluator:
 
-    def __init__(self, tabpfn_model):
+    def __init__(self, tabpfn_model, device):
 
         self.cache = EmbeddingCache()
         self.tabpfn_model = tabpfn_model
+        self.device = device
 
     def _get_transform(
         self,
@@ -48,14 +50,26 @@ class Evaluator:
                 )
             )
 
+        else:
+
+            base.append(
+                ResizeToMultipleOf14()
+            )
+
         if config["augmentation"] == "randaugment":
 
             train_transform = transforms.Compose(
                 base
                 + [
-                    transforms.RandAugment(num_ops=2, magnitude=5),
+                    transforms.RandAugment(
+                        num_ops=2,
+                        magnitude=5,
+                    ),
                     transforms.ToTensor(),
-                    transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+                    transforms.Normalize(
+                        mean=IMAGENET_MEAN,
+                        std=IMAGENET_STD,
+                    ),
                 ]
             )
 
@@ -65,7 +79,10 @@ class Evaluator:
                 base
                 + [
                     transforms.ToTensor(),
-                    transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+                    transforms.Normalize(
+                        mean=IMAGENET_MEAN,
+                        std=IMAGENET_STD,
+                    ),
                 ]
             )
 
@@ -73,7 +90,10 @@ class Evaluator:
             base
             + [
                 transforms.ToTensor(),
-                transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+                transforms.Normalize(
+                    mean=IMAGENET_MEAN,
+                    std=IMAGENET_STD,
+                ),
             ]
         )
 
@@ -81,7 +101,10 @@ class Evaluator:
             base
             + [
                 transforms.ToTensor(),
-                transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+                transforms.Normalize(
+                    mean=IMAGENET_MEAN,
+                    std=IMAGENET_STD,
+                ),
             ]
         )
 
@@ -195,7 +218,7 @@ class Evaluator:
 
             for x, y in loader:
 
-                x = x.cuda()
+                x = x.to(self.device)
 
                 z = encoder(x)
 
@@ -245,7 +268,7 @@ class Evaluator:
 
         encoder, embedding = get_encoder(config["encoder"])
         encoder.eval()
-        encoder.cuda()
+        encoder.to(self.device)
 
         # ==================================================
         # TRAIN EMBEDDINGS

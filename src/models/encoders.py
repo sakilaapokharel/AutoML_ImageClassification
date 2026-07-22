@@ -1,3 +1,5 @@
+import torch
+
 from torch import nn
 from torchvision import models
 
@@ -29,18 +31,72 @@ _ENCODERS = {
 }
 
 
+# ------------------------------------------------------------------
+# DINOv2 (torch.hub, facebookresearch/dinov2)
+# ------------------------------------------------------------------
+#
+# DINOv2 doesn't fit the torchvision pattern above:
+#   - loaded via torch.hub, not torchvision.models
+#   - forward(x) already returns a pooled [B, embedding_dim] CLS embedding
+#     directly -- there's no classification head to remove
+#   - embedding_dim is fixed per variant, not read off a submodule
+#
+# Variants with "_reg" use register tokens (recommended by the DINOv2 authors
+# to reduce attention artifacts); embedding_dim is unchanged by registers.
+#
+# Note: patch size is 14 for all variants. torchvision's Resize in your
+# transform config should ideally be a multiple of 14 (e.g. 224, 336, 518)
+# for a clean patch grid -- non-multiples still run (Conv2d silently drops
+# the remainder pixels) but waste a bit of the image.
+
+_DINOV2_EMBED_DIMS = {
+    "dinov2_vits14": 384,
+    "dinov2_vitb14": 768,
+    "dinov2_vitl14": 1024,
+    "dinov2_vitg14": 1536,
+    "dinov2_vits14_reg": 384,
+    "dinov2_vitb14_reg": 768,
+    "dinov2_vitl14_reg": 1024,
+    "dinov2_vitg14_reg": 1536,
+}
+
+
+def _get_dinov2_encoder(name: str, pretrained: bool):
+
+    if not pretrained:
+
+        raise ValueError(
+            f"'{name}' is only available pretrained (loaded via torch.hub from "
+            f"facebookresearch/dinov2). Random-init DINOv2 isn't supported here "
+            f"-- pass pretrained=True, or use a torchvision encoder instead."
+        )
+
+    model = torch.hub.load("facebookresearch/dinov2", name)
+
+    embedding_dim = _DINOV2_EMBED_DIMS[name]
+
+    return model, embedding_dim
+
+
 def get_encoder(name: str, pretrained: bool = True):
     """
     Returns
     -------
     encoder : nn.Module
-        Backbone with classification head removed.
+        Backbone with classification head removed (torchvision encoders),
+        or a DINOv2 backbone whose forward() already returns pooled embeddings.
     embedding_dim : int
         Size of the output embedding.
     """
+
+    if name in _DINOV2_EMBED_DIMS:
+
+        return _get_dinov2_encoder(name, pretrained)
+
     if name not in _ENCODERS:
         raise ValueError(
-            f"Unknown encoder '{name}'. " f"Available: {list(_ENCODERS.keys())}"
+            f"Unknown encoder '{name}'. "
+            f"Available: {list(_ENCODERS.keys()) + list(_DINOV2_EMBED_DIMS.keys())}"
         )
 
     constructor, weights, get_dim, remove_head = _ENCODERS[name]

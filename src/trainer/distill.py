@@ -35,6 +35,7 @@ from automl.utils import (
     print_header,
     print_step,
     print_progress,
+    ResizeToMultipleOf14
 )
 
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
@@ -45,7 +46,7 @@ class Distiller:
 
     def __init__(
         self,
-        batch_size=256,
+        batch_size=64,
         epochs=111,
         lr=1e-3,
         alpha=0.3,
@@ -57,6 +58,10 @@ class Distiller:
         fidelity=56,
         seed=42,
         tabpfn_model=TabPFNModel,
+        finetune=False,
+        finetune_epochs=111,
+        finetune_lr=1e-4,
+        finetune_patience=29,
     ):
 
         self.batch_size = batch_size
@@ -68,6 +73,15 @@ class Distiller:
 
         self.patience = patience
         self.val_ratio = val_ratio
+
+        # supervised fine-tuning phase, run after distillation on the same
+        # train/val split, using only true hard labels (no KD term), at a
+        # lower LR -- sharpens the decision boundary the soft-label training
+        # may have blurred. Set finetune=False to skip and keep old behavior.
+        self.finetune = finetune
+        self.finetune_epochs = finetune_epochs
+        self.finetune_lr = finetune_lr
+        self.finetune_patience = finetune_patience
 
         self.device = device
 
@@ -82,65 +96,87 @@ class Distiller:
     # ------------------------------------------------
 
     def _get_transform(
-            self,
-            config,
-        ):
+        self,
+        config,
+    ):
 
-            base = []
+        base = []
 
-            if config["resize"] is not None:
+        if config["resize"] is not None:
 
-                base.append(
-                    transforms.Resize(
-                        (
-                            config["resize"],
-                            config["resize"],
-                        )
+            base.append(
+                transforms.Resize(
+                    (
+                        config["resize"],
+                        config["resize"],
                     )
                 )
+            )
 
-            if config["augmentation"] == "randaugment":
+        else:
 
-                train_transform = transforms.Compose(
-                    base
-                    + [
-                        transforms.RandAugment(num_ops=2, magnitude=5),
-                        transforms.ToTensor(),
-                        transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
-                    ]
-                )
+            base.append(
+                ResizeToMultipleOf14()
+            )
 
-            else:
+        if config["augmentation"] == "randaugment":
 
-                train_transform = transforms.Compose(
-                    base
-                    + [
-                        transforms.ToTensor(),
-                        transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
-                    ]
-                )
-
-            original_transform = transforms.Compose(
+            train_transform = transforms.Compose(
                 base
                 + [
+                    transforms.RandAugment(
+                        num_ops=2,
+                        magnitude=5,
+                    ),
                     transforms.ToTensor(),
-                    transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+                    transforms.Normalize(
+                        mean=IMAGENET_MEAN,
+                        std=IMAGENET_STD,
+                    ),
                 ]
             )
 
-            test_transform = transforms.Compose(
+        else:
+
+            train_transform = transforms.Compose(
                 base
                 + [
                     transforms.ToTensor(),
-                    transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+                    transforms.Normalize(
+                        mean=IMAGENET_MEAN,
+                        std=IMAGENET_STD,
+                    ),
                 ]
             )
 
-            return (
-                original_transform,
-                train_transform,
-                test_transform,
-            )
+        original_transform = transforms.Compose(
+            base
+            + [
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=IMAGENET_MEAN,
+                    std=IMAGENET_STD,
+                ),
+            ]
+        )
+
+        test_transform = transforms.Compose(
+            base
+            + [
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=IMAGENET_MEAN,
+                    std=IMAGENET_STD,
+                ),
+            ]
+        )
+
+        return (
+            original_transform,
+            train_transform,
+            test_transform,
+        )
+
 
     # ------------------------------------------------
     # Dataset
@@ -322,11 +358,12 @@ class Distiller:
         X,
     ):
 
-        if reducer is not None:
 
-            X = reducer.transform(X)
-
-        return teacher.predict_proba(X)
+        # TabPFNModel.predict_proba already batches internally (see
+        # models/tabpfn.py) -- delegate to it instead of chunking again here.
+        return teacher.predict_proba(
+            X,
+        )
 
     # ------------------------------------------------
     # Student
@@ -523,6 +560,132 @@ class Distiller:
 
             student.load_state_dict(best_state)
 
+        return student, train_loader, val_loader
+
+    # ------------------------------------------------
+    # Fine-tune (supervised, post-distillation)
+    # ------------------------------------------------
+
+    def _finetune_student(
+        self,
+        student,
+        train_loader,
+        val_loader,
+    ):
+
+        print_step("Fine-tuning student on true labels")
+
+        optimizer = torch.optim.AdamW(
+            student.parameters(),
+            lr=self.finetune_lr,
+            weight_decay=1e-4,
+        )
+
+        ce = nn.CrossEntropyLoss()
+
+        best_loss = float("inf")
+
+        best_state = None
+
+        patience_counter = 0
+
+        for epoch in range(self.finetune_epochs):
+
+            student.train()
+
+            train_loss = 0
+
+            # train_loader/val_loader yield (x, soft, y) triples from the
+            # distillation TensorDataset -- soft labels are simply unused here.
+            for x, _soft, y in train_loader:
+
+                x = x.to(self.device)
+
+                y = y.to(self.device)
+
+                logits = student(x)
+
+                loss = ce(
+                    logits,
+                    y,
+                )
+
+                optimizer.zero_grad()
+
+                loss.backward()
+
+                optimizer.step()
+
+                train_loss += loss.item()
+
+            train_loss /= len(train_loader)
+
+            # validation
+
+            student.eval()
+
+            val_loss = 0
+
+            correct = 0
+
+            total = 0
+
+            with torch.no_grad():
+
+                for x, _soft, y in val_loader:
+
+                    x = x.to(self.device)
+
+                    y = y.to(self.device)
+
+                    logits = student(x)
+
+                    loss = ce(
+                        logits,
+                        y,
+                    )
+
+                    val_loss += loss.item()
+
+                    pred = torch.argmax(logits, dim=1)
+
+                    correct += (pred == y).sum().item()
+
+                    total += len(y)
+
+            val_loss /= len(val_loader)
+
+            val_acc = correct / total
+
+            print(
+                f"[Finetune] Epoch {epoch+1}/{self.finetune_epochs} "
+                f"Train={train_loss:.4f} "
+                f"Val={val_loss:.4f} "
+                f"ValAcc={val_acc:.4f}"
+            )
+
+            if val_loss < best_loss:
+
+                best_loss = val_loss
+
+                best_state = student.state_dict()
+
+                patience_counter = 0
+
+            else:
+
+                patience_counter += 1
+
+            if patience_counter >= self.finetune_patience:
+
+                print("Early stopping (fine-tune)")
+
+                break
+
+        if best_state:
+
+            student.load_state_dict(best_state)
+
         return student
 
     # ------------------------------------------------
@@ -537,6 +700,7 @@ class Distiller:
         reducer,
         teacher=None,
         results=None,
+        finetuned=False,
     ):
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -600,6 +764,9 @@ class Distiller:
             "created": timestamp,
             "results": (results if results else None),
             "folder": str(folder),
+            "finetuned": finetuned,
+            "n_estimators" : self.fidelity,
+            "batch":self.batch_size
         }
 
         with open(
@@ -663,12 +830,20 @@ class Distiller:
             X_train,
         )
 
-        student = self._train_student(
+        student, train_loader, val_loader = self._train_student(
             X_train,
             soft_labels,
             y_train,
             dataset_cls.num_classes,
         )
+
+        if self.finetune:
+
+            student = self._finetune_student(
+                student,
+                train_loader,
+                val_loader,
+            )
 
         checkpoint = self._save(
             dataset_cls._dataset_name,
@@ -676,6 +851,7 @@ class Distiller:
             student,
             reducer,
             teacher=teacher,
+            finetuned=self.finetune,
         )
 
         print_step("Evaluating teacher and student")
@@ -902,3 +1078,4 @@ class Distiller:
                 )
 
         return results
+

@@ -81,18 +81,18 @@ def main():
     )
     # config = {'encoder': 'efficientnet_b0', 'embedding_dim': None, 'resize': 224, 'augmentation': 'none'}
     # config= {"encoder": "densenet121", "embedding_dim": None, "resize": 224, "augmentation": "none"}
-    best_config = {
-        "encoder": "mobilenet_v2",
-        "embedding_dim": None,
-        "resize": 224,
-        "augmentation": "randaugment"
-    }
-    student = automl.distill(
-        best_config=best_config,
-    )
+    # best_config = {
+    #     "encoder": "dinov2_vitb14",
+    #     "embedding_dim": None,
+    #     "resize": 224,
+    #     "augmentation": "randaugment"
+    # }
+    # student = automl.distill(
+    #     best_config=best_config,
+    # )
 
-    # best_config = automl.successive_halving()
-    # print(best_config)
+    best_config = automl.successive_halving()
+    print(best_config)
 
 
 if __name__ == "__main__":

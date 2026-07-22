@@ -9,6 +9,7 @@ from automl.cache import EmbeddingCache
 from automl.config import SUCCESSIVE_HALVING_FIDELITIES, SUCCESSIVE_HALVING_REDUCTION
 from trainer.distill import Distiller
 from models.tabpfn import TabPFNModel
+import torch
 
 class AutoML:
 
@@ -39,23 +40,29 @@ class AutoML:
             fidelity=fidelity,
             dataset_cls=self.dataset_cls,
         )
+        self.device = (
+            "mps" if torch.backends.mps.is_available()
+            else "cuda" if torch.cuda.is_available()
+            else "cpu"
+        )
         self.tabpfn_model = TabPFNModel(
             mode=tabpfn_mode,
             seed=seed,
             n_estimators=tabpfn_estimators,
+            device=self.device,
         )
         self.tabpfn_mode = tabpfn_mode
 
         self.cache = EmbeddingCache()
 
-        self.evaluator = Evaluator(tabpfn_model = self.tabpfn_model)
+        self.evaluator = Evaluator(tabpfn_model = self.tabpfn_model, device=self.device)
         self.results = Results(
             dataset_name=self.dataset_name,
             tabpfn_mode=self.tabpfn_mode,
             seed=self.seed,
         )
         self.train_fidelity = train_fidelity
-        self.distiller = Distiller(fidelity=self.train_fidelity, seed=self.seed, tabpfn_model=self.tabpfn_model)
+        self.distiller = Distiller(fidelity=self.train_fidelity, seed=self.seed, tabpfn_model=self.tabpfn_model, device=self.device)
 
     def _load_datasets(self):
 

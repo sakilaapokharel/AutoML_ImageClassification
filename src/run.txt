@@ -1,2 +1,4 @@
 python src/run.py --dataset flowers --train_fidelity 56 --tabpfn_client
-python src/run.py --dataset flowers --train_fidelity 56 --tabpfn_client
+python src/run.py --dataset flowers --train_fidelity 500 --tabpfn_client
+python src/run.py --dataset flowers --train_fidelity 500 --tabpfn_client
+

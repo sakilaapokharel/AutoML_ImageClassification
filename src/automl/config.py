@@ -1,5 +1,6 @@
 SEARCH_SPACE = {
     "encoder": [
+        "dinov2_vitb14",
         "resnet18",
         "efficientnet_b0",
         "mobilenet_v2",
@@ -9,7 +10,7 @@ SEARCH_SPACE = {
         # 128,
         None,
     ],
-    "resize": [224, None],
+    "resize": [None, 224],
     "augmentation": [
         "none",
         "randaugment",
@@ -17,12 +18,9 @@ SEARCH_SPACE = {
 }
 
 SUCCESSIVE_HALVING_FIDELITIES = [
-    11,
-    # 12,
-    # 56,
-    # 111,
-    # 299,
+    29,
+    56,
 ]
 
 
-SUCCESSIVE_HALVING_REDUCTION = 8
+SUCCESSIVE_HALVING_REDUCTION = 4
