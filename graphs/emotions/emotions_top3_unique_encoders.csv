@@ -1,0 +1,6 @@
+encoder,PCA,augmentation,accuracy
+tinyvit_5m,No PCA,imagenet_default,0.5024
+levit_128s,No PCA,imagenet_default,0.3896
+mobilenetv3_small,No PCA,texture_preserving,0.3182
+edgenext_xx_small,No PCA,imagenet_default,0.2872
+deit_tiny,64,texture_preserving,0.2842

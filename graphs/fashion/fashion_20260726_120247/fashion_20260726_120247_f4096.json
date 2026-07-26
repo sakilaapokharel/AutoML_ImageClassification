@@ -1,0 +1,73 @@
+{
+    "dataset": "fashion",
+    "tabpfn_mode": "local",
+    "seed": 42,
+    "fidelity": 4096,
+    "results": [
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": 128,
+                "preprocess_policy": "imagenet_default"
+            },
+            "accuracy": 0.879,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "successive_halving",
+            "best_score_so_far": 0.879,
+            "cumulative_time": 3453.0865802764893,
+            "evaluation_count": 94,
+            "compute_time": 90.653
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": null,
+                "preprocess_policy": "imagenet_default"
+            },
+            "accuracy": 0.8825,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "successive_halving",
+            "best_score_so_far": 0.8825,
+            "cumulative_time": 3482.8879749774933,
+            "evaluation_count": 95,
+            "compute_time": 29.801
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": null,
+                "preprocess_policy": "strong_aug"
+            },
+            "accuracy": 0.8774166666666666,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "successive_halving",
+            "best_score_so_far": 0.8825,
+            "cumulative_time": 3558.9251749515533,
+            "evaluation_count": 96,
+            "compute_time": 76.037
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": 64,
+                "preprocess_policy": "strong_aug"
+            },
+            "accuracy": 0.8788333333333334,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "successive_halving",
+            "best_score_so_far": 0.8825,
+            "cumulative_time": 3567.907142162323,
+            "evaluation_count": 97,
+            "compute_time": 8.982
+        }
+    ],
+    "search_strategy": "successive_halving"
+}

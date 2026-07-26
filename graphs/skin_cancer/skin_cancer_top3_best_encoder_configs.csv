@@ -1,0 +1,6 @@
+encoder,PCA,augmentation,accuracy
+tinyvit_5m,64,texture_preserving,0.6733
+tinyvit_5m,128,texture_preserving,0.6648
+tinyvit_5m,64,texture_preserving,0.632
+tinyvit_5m,128,texture_preserving,0.6298
+tinyvit_5m,64,imagenet_default,0.6277

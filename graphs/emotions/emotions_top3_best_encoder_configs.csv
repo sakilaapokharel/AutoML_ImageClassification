@@ -1,0 +1,6 @@
+encoder,PCA,augmentation,accuracy
+tinyvit_5m,No PCA,imagenet_default,0.5024
+tinyvit_5m,64,imagenet_default,0.4991
+tinyvit_5m,128,imagenet_default,0.4943
+tinyvit_5m,No PCA,strong_aug,0.4936
+tinyvit_5m,No PCA,imagenet_default,0.4596

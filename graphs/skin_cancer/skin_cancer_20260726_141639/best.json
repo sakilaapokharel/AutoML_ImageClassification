@@ -1,0 +1,14 @@
+{
+    "dataset": "skin_cancer",
+    "tabpfn_mode": "local",
+    "seed": 42,
+    "best_accuracy": 0.6733238231098431,
+    "best_config": {
+        "encoder": "tinyvit_5m",
+        "embedding_dim": 64,
+        "preprocess_policy": "texture_preserving"
+    },
+    "search_strategy": "successive_halving",
+    "cumulative_time": 640.3506639003754,
+    "evaluation_count": 97
+}

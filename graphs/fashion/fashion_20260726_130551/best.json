@@ -1,0 +1,14 @@
+{
+    "dataset": "fashion",
+    "tabpfn_mode": "local",
+    "seed": 42,
+    "best_accuracy": 0.8846666666666667,
+    "best_config": {
+        "encoder": "tinyvit_5m",
+        "embedding_dim": 64,
+        "preprocess_policy": "imagenet_default"
+    },
+    "search_strategy": "bohb",
+    "cumulative_time": 2639.603491783142,
+    "evaluation_count": 85
+}

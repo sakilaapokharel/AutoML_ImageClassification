@@ -1,0 +1,417 @@
+{
+    "dataset": "fashion",
+    "tabpfn_mode": "local",
+    "seed": 42,
+    "fidelity": 4096,
+    "results": [
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": 64,
+                "resize": 224,
+                "preprocess_policy": "texture_preserving"
+            },
+            "accuracy": 0.87875,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.87875,
+            "cumulative_time": 174.2013123035431,
+            "evaluation_count": 3,
+            "compute_time": 60.955
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "edgenext_xx_small",
+                "embedding_dim": 64,
+                "resize": 224,
+                "preprocess_policy": "strong_aug"
+            },
+            "accuracy": 0.8510833333333333,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.87875,
+            "cumulative_time": 300.47761154174805,
+            "evaluation_count": 6,
+            "compute_time": 47.646
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "edgenext_xx_small",
+                "embedding_dim": 64,
+                "resize": 224,
+                "preprocess_policy": "imagenet_default"
+            },
+            "accuracy": 0.85825,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.87875,
+            "cumulative_time": 416.34194588661194,
+            "evaluation_count": 9,
+            "compute_time": 49.866
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "edgenext_xx_small",
+                "embedding_dim": null,
+                "resize": 224,
+                "preprocess_policy": "imagenet_default"
+            },
+            "accuracy": 0.84675,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.87875,
+            "cumulative_time": 542.5333254337311,
+            "evaluation_count": 14,
+            "compute_time": 14.382
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "mobilenetv3_small",
+                "embedding_dim": null,
+                "resize": 224,
+                "preprocess_policy": "contrast_enhanced"
+            },
+            "accuracy": 0.8228333333333333,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.87875,
+            "cumulative_time": 892.7974998950958,
+            "evaluation_count": 18,
+            "compute_time": 131.588
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "levit_128s",
+                "embedding_dim": 128,
+                "resize": 224,
+                "preprocess_policy": "imagenet_default"
+            },
+            "accuracy": 0.8516666666666667,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.87875,
+            "cumulative_time": 1010.1593375205994,
+            "evaluation_count": 21,
+            "compute_time": 43.111
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "edgenext_xx_small",
+                "embedding_dim": null,
+                "resize": 224,
+                "preprocess_policy": "contrast_enhanced"
+            },
+            "accuracy": 0.7474166666666666,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.87875,
+            "cumulative_time": 1159.1262028217316,
+            "evaluation_count": 24,
+            "compute_time": 58.071
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": 64,
+                "resize": 224,
+                "preprocess_policy": "texture_preserving"
+            },
+            "accuracy": 0.87875,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.87875,
+            "cumulative_time": 1177.77832365036,
+            "evaluation_count": 27,
+            "compute_time": 8.75
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": 64,
+                "resize": 224,
+                "preprocess_policy": "texture_preserving"
+            },
+            "accuracy": 0.87875,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.87875,
+            "cumulative_time": 1196.3520317077637,
+            "evaluation_count": 30,
+            "compute_time": 8.719
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": 64,
+                "resize": 224,
+                "preprocess_policy": "strong_aug"
+            },
+            "accuracy": 0.8799166666666667,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.8799166666666667,
+            "cumulative_time": 1631.521868944168,
+            "evaluation_count": 35,
+            "compute_time": 84.028
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": 64,
+                "resize": 224,
+                "preprocess_policy": "strong_aug"
+            },
+            "accuracy": 0.8799166666666667,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.8799166666666667,
+            "cumulative_time": 1650.2495136260986,
+            "evaluation_count": 38,
+            "compute_time": 8.794
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": 64,
+                "resize": 224,
+                "preprocess_policy": "strong_aug"
+            },
+            "accuracy": 0.8799166666666667,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.8799166666666667,
+            "cumulative_time": 1674.076610326767,
+            "evaluation_count": 42,
+            "compute_time": 8.844
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "mobilenetv3_small",
+                "embedding_dim": 128,
+                "resize": 224,
+                "preprocess_policy": "grayscale_enhanced"
+            },
+            "accuracy": 0.7950833333333334,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.8799166666666667,
+            "cumulative_time": 1828.1887731552124,
+            "evaluation_count": 45,
+            "compute_time": 63.618
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": null,
+                "resize": 224,
+                "preprocess_policy": "strong_aug"
+            },
+            "accuracy": 0.876,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.8799166666666667,
+            "cumulative_time": 1956.9132471084595,
+            "evaluation_count": 51,
+            "compute_time": 30.199
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": 64,
+                "resize": 224,
+                "preprocess_policy": "grayscale_enhanced"
+            },
+            "accuracy": 0.7883333333333333,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.8799166666666667,
+            "cumulative_time": 2170.0291192531586,
+            "evaluation_count": 55,
+            "compute_time": 70.469
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": 64,
+                "resize": 224,
+                "preprocess_policy": "imagenet_default"
+            },
+            "accuracy": 0.8846666666666667,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.8846666666666667,
+            "cumulative_time": 2314.77605009079,
+            "evaluation_count": 58,
+            "compute_time": 55.997
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": 64,
+                "resize": 224,
+                "preprocess_policy": "imagenet_default"
+            },
+            "accuracy": 0.8846666666666667,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.8846666666666667,
+            "cumulative_time": 2334.4405703544617,
+            "evaluation_count": 61,
+            "compute_time": 9.158
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": 64,
+                "resize": 224,
+                "preprocess_policy": "imagenet_default"
+            },
+            "accuracy": 0.8846666666666667,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.8846666666666667,
+            "cumulative_time": 2354.752332687378,
+            "evaluation_count": 64,
+            "compute_time": 9.48
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": 64,
+                "resize": 224,
+                "preprocess_policy": "imagenet_default"
+            },
+            "accuracy": 0.8846666666666667,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.8846666666666667,
+            "cumulative_time": 2374.130651473999,
+            "evaluation_count": 67,
+            "compute_time": 9.033
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": 128,
+                "resize": 224,
+                "preprocess_policy": "imagenet_default"
+            },
+            "accuracy": 0.879,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.8846666666666667,
+            "cumulative_time": 2401.9861178398132,
+            "evaluation_count": 70,
+            "compute_time": 12.793
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": 64,
+                "resize": 224,
+                "preprocess_policy": "imagenet_default"
+            },
+            "accuracy": 0.8846666666666667,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.8846666666666667,
+            "cumulative_time": 2454.8555114269257,
+            "evaluation_count": 74,
+            "compute_time": 9.208
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": null,
+                "resize": 224,
+                "preprocess_policy": "imagenet_default"
+            },
+            "accuracy": 0.8825,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.8846666666666667,
+            "cumulative_time": 2518.426290988922,
+            "evaluation_count": 77,
+            "compute_time": 30.405
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "levit_128s",
+                "embedding_dim": 64,
+                "resize": 224,
+                "preprocess_policy": "imagenet_default"
+            },
+            "accuracy": 0.8535,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.8846666666666667,
+            "cumulative_time": 2537.9579570293427,
+            "evaluation_count": 80,
+            "compute_time": 9.266
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": 64,
+                "resize": 224,
+                "preprocess_policy": "imagenet_default"
+            },
+            "accuracy": 0.8846666666666667,
+            "train_samples": 4096,
+            "num_instance_per_class": 409,
+            "search_strategy": "bohb",
+            "best_score_so_far": 0.8846666666666667,
+            "cumulative_time": 2588.400233745575,
+            "evaluation_count": 84,
+            "compute_time": 8.96
+        }
+    ],
+    "search_strategy": "bohb"
+}

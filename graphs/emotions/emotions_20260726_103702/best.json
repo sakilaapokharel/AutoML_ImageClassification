@@ -1,0 +1,15 @@
+{
+    "dataset": "emotions",
+    "tabpfn_mode": "local",
+    "seed": 42,
+    "best_accuracy": 0.502438174851968,
+    "best_config": {
+        "encoder": "tinyvit_5m",
+        "embedding_dim": null,
+        "preprocess_policy": "imagenet_default",
+        "resize": 224
+    },
+    "search_strategy": "bohb",
+    "cumulative_time": 1877.572905778885,
+    "evaluation_count": 95
+}

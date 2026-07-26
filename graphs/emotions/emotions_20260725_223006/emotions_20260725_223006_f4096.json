@@ -1,0 +1,73 @@
+{
+    "dataset": "emotions",
+    "tabpfn_mode": "local",
+    "seed": 42,
+    "fidelity": 4096,
+    "results": [
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": null,
+                "preprocess_policy": "imagenet_default"
+            },
+            "accuracy": 0.502438174851968,
+            "train_samples": 4096,
+            "num_instance_per_class": 585,
+            "search_strategy": "successive_halving",
+            "best_score_so_far": 0.502438174851968,
+            "cumulative_time": 1625.0448782444,
+            "evaluation_count": 94,
+            "compute_time": 61.389
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": 128,
+                "preprocess_policy": "imagenet_default"
+            },
+            "accuracy": 0.4942528735632184,
+            "train_samples": 4096,
+            "num_instance_per_class": 585,
+            "search_strategy": "successive_halving",
+            "best_score_so_far": 0.502438174851968,
+            "cumulative_time": 1631.901267528534,
+            "evaluation_count": 95,
+            "compute_time": 6.856
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": 64,
+                "preprocess_policy": "imagenet_default"
+            },
+            "accuracy": 0.4991292232671543,
+            "train_samples": 4096,
+            "num_instance_per_class": 585,
+            "search_strategy": "successive_halving",
+            "best_score_so_far": 0.502438174851968,
+            "cumulative_time": 1636.6795046329498,
+            "evaluation_count": 96,
+            "compute_time": 4.778
+        },
+        {
+            "fidelity": 4096,
+            "config": {
+                "encoder": "tinyvit_5m",
+                "embedding_dim": null,
+                "preprocess_policy": "strong_aug"
+            },
+            "accuracy": 0.4935562521769418,
+            "train_samples": 4096,
+            "num_instance_per_class": 585,
+            "search_strategy": "successive_halving",
+            "best_score_so_far": 0.502438174851968,
+            "cumulative_time": 1679.9724702835083,
+            "evaluation_count": 97,
+            "compute_time": 43.293
+        }
+    ],
+    "search_strategy": "successive_halving"
+}

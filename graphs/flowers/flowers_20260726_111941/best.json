@@ -1,0 +1,15 @@
+{
+    "dataset": "flowers",
+    "tabpfn_mode": "local",
+    "seed": 42,
+    "best_accuracy": 0.9285091543156059,
+    "best_config": {
+        "encoder": "tinyvit_5m",
+        "embedding_dim": 64,
+        "preprocess_policy": "texture_preserving",
+        "resize": 224
+    },
+    "search_strategy": "bohb",
+    "cumulative_time": 1547.4724583625793,
+    "evaluation_count": 89
+}
