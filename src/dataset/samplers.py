@@ -3,40 +3,48 @@ from collections import defaultdict
 from torch.utils.data import Dataset
 
 
-class InstancesPerClassDataset(Dataset):
+class InstancesPerClassDataset:
 
     def __init__(
         self,
         dataset,
+        indices,
         instances_per_class,
         seed=42,
     ):
+
         self.dataset = dataset
 
-        rng = random.Random(seed)
+        random.seed(seed)
+
+        self.selected_indices = []
 
         class_indices = defaultdict(list)
 
-        for idx, label in enumerate(dataset._labels):
+        for idx in indices:
+
+            label = dataset._labels[idx]
+
             class_indices[label].append(idx)
 
-        self.indices = []
+        for label, idxs in class_indices.items():
 
-        for indices in class_indices.values():
-
-            rng.shuffle(indices)
-
-            max_instances = min(
-                instances_per_class,
-                len(indices),
+            selected = random.sample(
+                idxs,
+                min(
+                    instances_per_class,
+                    len(idxs),
+                ),
             )
 
-            self.indices.extend(indices[:max_instances])
-
-        rng.shuffle(self.indices)
+            self.selected_indices.extend(selected)
 
     def __len__(self):
-        return len(self.indices)
 
-    def __getitem__(self, idx):
-        return self.dataset[self.indices[idx]]
+        return len(self.selected_indices)
+
+    def __getitem__(self, index):
+
+        real_idx = self.selected_indices[index]
+
+        return self.dataset[real_idx]

@@ -13,6 +13,7 @@ from torchvision.datasets import VisionDataset
 from torchvision.datasets.utils import download_and_extract_archive, check_integrity
 import tempfile
 import shutil
+import torch
 
 
 class BaseVisionDataset(VisionDataset):
@@ -203,19 +204,34 @@ class SkinCancerDataset(BaseVisionDataset):
     channels = 3
     num_classes = 7
 
+class StudentDistillDataset(torch.utils.data.Dataset):
 
-class SkinCancer_Test_Dataset(BaseVisionDataset):
-    """SkinCancer Dataset.
+    def __init__(self, X, teacher_probs, labels, indices, transform=None):
+        self.X = X
+        self.teacher_probs = teacher_probs
+        self.labels = labels
+        self.indices = indices
+        self.transform = transform
 
-    The SkinCancer dataset contains images of skin lesions. The task is to classify what kind of skin lesion it is.
+    def __len__(self):
+        return len(self.indices)
 
-    This is the test dataset for the AutoML exam. It does not contain the labels for the test split.
-    You are expected to predict these labels and save them to a file called `final_test_preds.npy` for your
-    final submission.
-    """
+    def __getitem__(self, idx):
+        real_idx = self.indices[idx]
 
-    _dataset_name = "skin_cancer_test"
-    width = 450
-    height = 450
-    channels = 3
-    num_classes = 7
+        x = self.X[real_idx]
+
+        if self.transform:
+            x = self.transform(x)
+
+        return (
+            x,
+            torch.tensor(
+                self.teacher_probs[real_idx],
+                dtype=torch.float32,
+            ),
+            torch.tensor(
+                self.labels[real_idx],
+                dtype=torch.long,
+            ),
+        )

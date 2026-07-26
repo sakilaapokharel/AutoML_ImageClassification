@@ -17,17 +17,27 @@ def print_progress(current, total, every=100):
         print(f"## {current}/{total}")
 
 
+def search_space_size(search_space):
+    size = 1
 
-class ResizeToMultipleOf14:
+    for values in search_space.values():
+        size *= len(values)
 
-    def __call__(self, image):
+    return size
 
-        width, height = image.size
 
-        new_width = round(width / 14) * 14
-        new_height = round(height / 14) * 14
+def estimate_bohb_trials(search_space):
 
-        return image.resize(
-            (new_width, new_height),
-            Image.Resampling.BILINEAR,
-        )
+    n_configs = search_space_size(search_space)
+
+    if n_configs <= 100:
+        return max(30, n_configs // 2)
+
+    elif n_configs <= 1000:
+        return 100
+
+    elif n_configs <= 10000:
+        return 200
+
+    else:
+        return 300

@@ -1,96 +1,143 @@
+from collections import Counter
 from sklearn.model_selection import train_test_split
 from torch.utils.data import Subset
 
 from .samplers import InstancesPerClassDataset
-from torch.utils.data import Dataset
+from .transforms import build_transform, TransformDataset
 
 
-def load_train_test(
+def load_datasets(
     dataset_cls,
-    fidelity=29,
+    preprocess_policy,
+    resize=224,
+    fidelity=-1,
     seed=42,
-    transform=None,
-    **dataset_kwargs,
 ):
 
-    train_dataset = dataset_cls(
+    train_transform = build_transform(
+        image_size=resize,
+        preprocess_policy=preprocess_policy,
+        train=True,
+    )
+
+    val_transform = build_transform(
+        image_size=resize,
+        preprocess_policy=preprocess_policy,
+        train=False,
+    )
+
+    print("Train Transform")
+    print(train_transform)
+
+    print("Val Transform")
+    print(val_transform)
+
+    dataset = dataset_cls(
         split="train",
-        transform=transform,
-        **dataset_kwargs,
+        transform=None,
+        download=True,
     )
 
-    # Apply fidelity
-    if fidelity != -1:
+    labels = dataset._labels
 
-        train_dataset = InstancesPerClassDataset(
-            train_dataset,
-            instances_per_class=fidelity,
-            seed=seed,
+    # -------------------------------------------------
+    # Use the entire training set (no validation split)
+    # -------------------------------------------------
+    if fidelity == -1:
+
+        train_dataset = TransformDataset(
+            dataset,
+            train_transform,
         )
 
-    test_dataset = dataset_cls(
-        split="test",
-        transform=transform,
-        **dataset_kwargs,
-    )
+        print(f"\nDataset: {dataset_cls._dataset_name}")
+        print(f"Train: {len(train_dataset)}")
 
-    # Test labels unavailable
-    if not _has_labels(test_dataset):
+        sample_image, sample_label = train_dataset[0]
 
-        train_dataset, test_dataset = _split_validation(
-            train_dataset,
-            seed=seed,
-        )
+        print("\nImage information")
+        print(f"Image shape: {tuple(sample_image.shape)}")
+        print(f"Image dtype: {sample_image.dtype}")
 
-    return train_dataset, test_dataset
+        train_stats = Counter(labels)
 
+        print("\nClass distribution")
+        print(f"{'Class':<10}{'Train':<10}")
 
-def _has_labels(dataset):
+        for cls in sorted(train_stats):
+            print(f"{cls:<10}{train_stats[cls]:<10}")
 
-    labels = getattr(dataset, "_labels", None)
+        return train_dataset
 
-    return labels is not None and all(label is not None for label in labels)
-
-
-def _split_validation(
-    dataset,
-    val_fraction=0.2,
-    seed=42,
-):
-
-    labels = [dataset[i][1] for i in range(len(dataset))]
+    # -------------------------------------------------
+    # Train/validation split
+    # -------------------------------------------------
+    indices = list(range(len(dataset)))
 
     train_idx, val_idx = train_test_split(
-        range(len(dataset)),
-        test_size=val_fraction,
-        random_state=seed,
+        indices,
+        test_size=0.2,
         stratify=labels,
+        random_state=seed,
     )
 
-    return (
-        Subset(dataset, train_idx),
-        Subset(dataset, val_idx),
-    )
-
-
-class TransformDataset(Dataset):
-
-    def __init__(
-        self,
+    train_subset = InstancesPerClassDataset(
         dataset,
-        transform,
-    ):
-        self.dataset = dataset
-        self.transform = transform
+        indices=train_idx,
+        instances_per_class=fidelity,
+        seed=seed,
+    )
 
-    def __len__(self):
-        return len(self.dataset)
+    val_subset = Subset(
+        dataset,
+        val_idx,
+    )
 
-    def __getitem__(self, idx):
+    train_dataset = TransformDataset(
+        train_subset,
+        train_transform,
+    )
 
-        image, label = self.dataset[idx]
+    val_dataset = TransformDataset(
+        val_subset,
+        val_transform,
+    )
 
-        if self.transform:
-            image = self.transform(image)
+    print(f"\nDataset: {dataset_cls._dataset_name}")
+    print(f"Train: {len(train_dataset)}")
+    print(f"Validation: {len(val_dataset)}")
 
-        return image, label
+    sample_image, sample_label = train_dataset[0]
+
+    print("\nImage information")
+    print(f"Image shape: {tuple(sample_image.shape)}")
+    print(f"Image dtype: {sample_image.dtype}")
+
+    train_labels_final = [labels[idx] for idx in train_subset.selected_indices]
+    val_labels_final = [labels[idx] for idx in val_idx]
+
+    train_stats = Counter(train_labels_final)
+    val_stats = Counter(val_labels_final)
+
+    print("\nClass distribution")
+    print(f"{'Class':<10}{'Train':<10}{'Val':<10}")
+
+    for cls in sorted(set(labels)):
+        print(f"{cls:<10}" f"{train_stats[cls]:<10}" f"{val_stats[cls]:<10}")
+
+    return train_dataset, val_dataset
+
+def load_test_datasets(dataset_cls, seed=42):
+    test_transform = build_transform(
+        train=False,
+    )
+    dataset = dataset_cls(
+        split="test",
+        transform=None,
+        download=True,
+    )
+    test_dataset = TransformDataset(
+        dataset,
+        test_transform,
+        )
+    return test_dataset

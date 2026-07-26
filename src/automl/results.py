@@ -9,6 +9,7 @@ class Results:
         self,
         dataset_name,
         tabpfn_mode,
+        search_strategy,
         seed,
         root="results",
     ):
@@ -16,6 +17,7 @@ class Results:
         self.dataset_name = dataset_name
         self.tabpfn_mode = tabpfn_mode
         self.seed = seed
+        self.search_strategy = search_strategy
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -38,8 +40,11 @@ class Results:
         config,
         score,
         train_samples,
-        test_samples,
+        num_instance_per_class,
         compute_time,
+        best_score_so_far,
+        cumulative_time,
+        evaluation_count,
     ):
 
         result = {
@@ -47,7 +52,11 @@ class Results:
             "config": config,
             "accuracy": float(score),
             "train_samples": train_samples,
-            "test_samples": test_samples,
+            "num_instance_per_class": num_instance_per_class,
+            "search_strategy": self.search_strategy,
+            "best_score_so_far": best_score_so_far,
+            "cumulative_time": cumulative_time,
+            "evaluation_count": evaluation_count,
             "compute_time": round(
                 compute_time,
                 3,
@@ -74,6 +83,7 @@ class Results:
             "seed": self.seed,
             "fidelity": fidelity,
             "results": stage_results,
+            "search_strategy": self.search_strategy,
         }
 
         with open(file, "w") as f:
@@ -89,6 +99,8 @@ class Results:
         self,
         score,
         config,
+        cumulative_time,
+        evaluation_count,
     ):
 
         file = self.output_dir / "best.json"
@@ -102,6 +114,9 @@ class Results:
                     "seed": self.seed,
                     "best_accuracy": float(score),
                     "best_config": config,
+                    "search_strategy": self.search_strategy,
+                    "cumulative_time": cumulative_time,
+                    "evaluation_count": evaluation_count,
                 },
                 f,
                 indent=4,

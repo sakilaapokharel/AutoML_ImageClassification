@@ -5,10 +5,7 @@ import shutil
 
 class EmbeddingCache:
 
-    def __init__(
-        self,
-        root="cache",
-    ):
+    def __init__(self, root="cache"):
         self.root = Path(root)
 
     # --------------------------------------------------
@@ -33,27 +30,29 @@ class EmbeddingCache:
             / f"{transform}_seed_{seed}"
         )
 
-        path.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
+        path.mkdir(parents=True, exist_ok=True)
 
         return path
 
-    def _test_path(
+    def _val_path(
         self,
         dataset,
+        fidelity,
         encoder,
         transform,
         seed,
     ):
 
-        path = self.root / dataset / "test" / encoder / f"{transform}_seed_{seed}"
-
-        path.mkdir(
-            parents=True,
-            exist_ok=True,
+        path = (
+            self.root
+            / dataset
+            / "val"
+            / f"fidelity_{fidelity}"
+            / encoder
+            / f"{transform}_seed_{seed}"
         )
+
+        path.mkdir(parents=True, exist_ok=True)
 
         return path
 
@@ -80,22 +79,24 @@ class EmbeddingCache:
 
         return (path / "X_train.npy").exists() and (path / "y_train.npy").exists()
 
-    def test_exists(
+    def val_exists(
         self,
         dataset,
+        fidelity,
         encoder,
         transform,
         seed,
     ):
 
-        path = self._test_path(
+        path = self._val_path(
             dataset,
+            fidelity,
             encoder,
             transform,
             seed,
         )
 
-        return (path / "X_test.npy").exists() and (path / "y_test.npy").exists()
+        return (path / "X_val.npy").exists() and (path / "y_val.npy").exists()
 
     # --------------------------------------------------
     # Save
@@ -120,46 +121,34 @@ class EmbeddingCache:
             seed,
         )
 
-        np.save(
-            path / "X_train.npy",
-            X_train,
-        )
-
-        np.save(
-            path / "y_train.npy",
-            y_train,
-        )
+        np.save(path / "X_train.npy", X_train)
+        np.save(path / "y_train.npy", y_train)
 
         print(f"Saved train embeddings: {path}")
 
-    def save_test(
+    def save_val(
         self,
         dataset,
+        fidelity,
         encoder,
         transform,
         seed,
-        X_test,
-        y_test,
+        X_val,
+        y_val,
     ):
 
-        path = self._test_path(
+        path = self._val_path(
             dataset,
+            fidelity,
             encoder,
             transform,
             seed,
         )
 
-        np.save(
-            path / "X_test.npy",
-            X_test,
-        )
+        np.save(path / "X_val.npy", X_val)
+        np.save(path / "y_val.npy", y_val)
 
-        np.save(
-            path / "y_test.npy",
-            y_test,
-        )
-
-        print(f"Saved test embeddings: {path}")
+        print(f"Saved val embeddings: {path}")
 
     # --------------------------------------------------
     # Load
@@ -189,26 +178,28 @@ class EmbeddingCache:
             np.load(path / "y_train.npy"),
         )
 
-    def load_test(
+    def load_val(
         self,
         dataset,
+        fidelity,
         encoder,
         transform,
         seed,
     ):
 
-        path = self._test_path(
+        path = self._val_path(
             dataset,
+            fidelity,
             encoder,
             transform,
             seed,
         )
 
-        print(f"Loading test embeddings: {path}")
+        print(f"Loading val embeddings: {path}")
 
         return (
-            np.load(path / "X_test.npy"),
-            np.load(path / "y_test.npy"),
+            np.load(path / "X_val.npy"),
+            np.load(path / "y_val.npy"),
         )
 
     # --------------------------------------------------

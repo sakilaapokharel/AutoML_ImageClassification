@@ -102,7 +102,7 @@ class TabPFNModel:
     def predict(
         self,
         X_test,
-        batch_size=100,
+        batch_size=2048,
     ):
         if self.mode == "client":
             batch_size = self._client_batch_size(X_test)
@@ -124,9 +124,7 @@ class TabPFNModel:
 
             print(f"Predicting {start}:{end}")
 
-            pred = self.model.predict(
-                X_test[start:end]
-            )
+            pred = self.model.predict(X_test[start:end])
 
             predictions.append(pred)
 
@@ -135,7 +133,7 @@ class TabPFNModel:
     def predict_proba(
         self,
         X_test,
-        batch_size=100,
+        batch_size=2048,
     ):
         if self.mode == "client":
             batch_size = self._client_batch_size(X_test)
@@ -157,9 +155,7 @@ class TabPFNModel:
 
             print(f"Predicting probabilities {start}:{end}")
 
-            probs = self.model.predict_proba(
-                X_test[start:end]
-            )
+            probs = self.model.predict_proba(X_test[start:end])
 
             probabilities.append(probs)
 

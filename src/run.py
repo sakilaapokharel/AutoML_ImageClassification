@@ -1,4 +1,4 @@
-from model import AutoML
+from search import AutoML
 from dotenv import load_dotenv
 import argparse
 import os
@@ -14,27 +14,22 @@ def main():
         "--dataset",
         type=str,
         required=True,
-        choices=[
-            "flowers",
-            "emotions",
-            "fashion",
-            "skin_cancer",
-            "skin_cancer_test"
-        ],
+        choices=["flowers", "emotions", "fashion", "skin_cancer", "skin_cancer_test"],
         help="Dataset to run AutoML on",
     )
 
     parser.add_argument(
-        "--fidelity",
-        type=int,
-        default=56,
+        "--search_strategy",
+        type=str,
+        default="successive_halving",
+        choices=["successive_halving", "bohb"],
         help=("Number of instances per class. " "Use -1 for all samples."),
     )
 
     parser.add_argument(
         "--train_fidelity",
         type=int,
-        default=500,
+        default=-1,
         help=("Number of instances per class. " "Use -1 for all samples."),
     )
 
@@ -74,25 +69,25 @@ def main():
 
     automl = AutoML(
         dataset=args.dataset,
-        fidelity=args.fidelity,
         seed=args.seed,
         tabpfn_mode=tabpfn_mode,
         train_fidelity=args.train_fidelity,
+        search_strategy=args.search_strategy,
     )
     # config = {'encoder': 'efficientnet_b0', 'embedding_dim': None, 'resize': 224, 'augmentation': 'none'}
     # config= {"encoder": "densenet121", "embedding_dim": None, "resize": 224, "augmentation": "none"}
     # best_config = {
-    #     "encoder": "dinov2_vitb14",
-    #     "embedding_dim": None,
+    #     "encoder": "tinyvit_5m",
+    #     "embedding_dim": 64,
     #     "resize": 224,
-    #     "augmentation": "randaugment"
+    #     "augmentation": "none",
     # }
     # student = automl.distill(
     #     best_config=best_config,
     # )
 
-    best_config = automl.successive_halving()
-    print(best_config)
+    best_config = automl.fit()
+    # print(best_config)
 
 
 if __name__ == "__main__":
