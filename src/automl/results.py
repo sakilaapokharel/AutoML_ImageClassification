@@ -21,7 +21,7 @@ class Results:
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-        self.run_name = f"{dataset_name}_{timestamp}"
+        self.run_name = f"{dataset_name}_{timestamp}_{seed}"
 
         self.output_dir = Path(root) / self.run_name
 
