@@ -415,13 +415,5 @@ class Distiller:
             dataset_cls.num_classes,
         )
 
-        if self.finetune:
-
-            student = self._finetune_student(
-                student,
-                train_loader,
-                val_loader,
-            )
-
         return teacher, student, reducer
 
