@@ -1,6 +1,64 @@
 # Running the Pipeline
+# Installation
 
-## Download the Datasets
+## 1. Create a Conda Environment
+
+Create a new Conda environment with Python 3.10:
+
+```bash
+conda create -n automl python=3.10
+```
+
+Activate the environment:
+
+```bash
+conda activate automl
+```
+
+---
+
+## 2. Install Dependencies
+
+Install the required Python packages:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## 3. Install PyTorch with CUDA Support (Important)
+
+This project relies on GPU acceleration for model training and inference.
+
+**Installing CUDA-enabled PyTorch is a critical requirement for this project.**
+
+After installing the remaining dependencies, install the CUDA-enabled PyTorch build:
+
+```bash
+pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu126
+```
+Alternatively, you can select the appropriate PyTorch installation command for your system (CUDA version, operating system, and Python version) from the official PyTorch installer:
+
+https://docs.pytorch.org/get-started/locally/
+
+Verify that PyTorch can access CUDA:
+
+```bash
+python -c "import torch; print(torch.cuda.is_available())"
+```
+
+Expected output:
+
+```text
+True
+```
+
+if CUDA is correctly installed and available.
+
+---
+
+## 4. Download the Datasets
 
 Before running any of the scripts, download all supported datasets.
 
@@ -21,9 +79,9 @@ Datasets are downloaded only once and reused in subsequent runs.
 
 ---
 
-The project provides four entry points depending on the stage of the workflow you want to execute.
 
-## 1. End-to-End Pipeline (Search + Training + Evaluation)
+
+## 5. End-to-End Pipeline (Search + Training + Evaluation)
 
 Runs the complete pipeline:
 
@@ -66,7 +124,7 @@ python run_pipeline.py \
 
 ---
 
-## 2. Run AutoML Search Only
+## 6. Run AutoML Search Only
 
 Runs only the AutoML search to identify the best hyperparameter configuration.
 
@@ -103,7 +161,7 @@ python run_only_search.py \
 
 ---
 
-## 3. Train Model Using Existing Search Results
+## 7. Train Model Using Existing Search Results
 
 Uses the latest saved AutoML configuration to train the image classifier and evaluate it on the test set.
 
@@ -123,7 +181,7 @@ python run_train_only.py --dataset skin_cancer
 
 ---
 
-## 4. Evaluate a Trained Model
+## 8. Evaluate a Trained Model
 
 Loads the saved model checkpoints and evaluates the trained classifier without retraining.
 
