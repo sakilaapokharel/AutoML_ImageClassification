@@ -1,20 +1,21 @@
-from trainer.distill import Distiller
-from models.tabpfn import TabPFNModel
-from models.student import Student
-from models.reducers import PCAReducer
-from models.encoders import get_encoder
-from trainer.utils import get_latest_config, get_best_config
-from dataset.config import DATASETS
-import torch
-from models.embedders import Embedder
-import pickle
-from pathlib import Path
-import os
-from automl.utils import print_header, print_step
-from dataset.loaders import load_test_datasets, load_datasets
 import json
+import os
+from pathlib import Path
 from typing import Tuple
+
 import numpy as np
+import torch
+
+from src.automl.utils import print_header, print_step
+from src.dataset.config import DATASETS
+from src.dataset.loaders import load_test_datasets
+from src.models.embedders import Embedder
+from src.models.encoders import get_encoder
+from src.models.reducers import PCAReducer
+from src.models.student import Student
+from src.models.tabpfn import TabPFNModel
+from src.trainer.distill import Distiller
+from src.trainer.utils import get_best_config, get_latest_config
 
 class ImageClassifier:
     def __init__(
@@ -24,6 +25,7 @@ class ImageClassifier:
         seed: int = 42,
         batch_size=64,
         tabpfn_mode: str = "local",
+        distill_flag: bool = False,
     ):
 
         self.DATASETS = DATASETS
@@ -39,6 +41,7 @@ class ImageClassifier:
         self.seed = seed
         self.tabpfn_mode = tabpfn_mode
         self.train_fidelity = train_fidelity
+        self.ditill_flag = distill_flag
 
         self.device = (
             "mps"
@@ -47,6 +50,8 @@ class ImageClassifier:
         )
 
         self.config = self.get_config()
+        self.encoder_name = self.config["encoder"]
+
         self.init_paths()
         self.encoder, self.encoder_dim = get_encoder(self.config["encoder"])
         self.encoder.eval()
@@ -64,7 +69,9 @@ class ImageClassifier:
 
         self.embedder = Embedder(self.encoder, device=self.device)
         self.student = Student(
-            embedding_dim=self.encoder_dim, num_classes=self.dataset_cls.num_classes
+            encoder_name=self.encoder_name,
+            hidden_dim=self.encoder_dim,
+            num_classes=self.dataset_cls.num_classes,
         )
         self.reducer = PCAReducer(dim=self.config["embedding_dim"], seed=self.seed)
 
@@ -74,6 +81,10 @@ class ImageClassifier:
             tabpfn_model=self.tabpfn_model,
             embedder=self.embedder,
             device=self.device,
+            dataset_name=self.dataset_name,
+            encoder_name=self.encoder_name,
+            embedding_dim=self.encoder_dim,
+            ditill_flag=self.ditill_flag,
         )
 
     def init_paths(
@@ -108,12 +119,6 @@ class ImageClassifier:
         self,
     ):
         torch.save(self.student.state_dict(), self.student_path)
-        with open(self.teacher_path, "wb") as f:
-            pickle.dump(self.teacher, f)
-        if self.reducer is not None:
-            with open(self.reducer_path, "wb") as f:
-                pickle.dump(self.reducer, f)
-
         return True
 
     def load_checkpoints(self):
@@ -121,37 +126,16 @@ class ImageClassifier:
 
         # Load student weights
         if os.path.exists(self.student_path):
-            state_dict = torch.load(
-                self.student_path,
-                map_location=self.device
-            )
+            state_dict = torch.load(self.student_path, map_location=self.device)
             self.student.load_state_dict(state_dict)
             self.student.to(self.device)
             self.student.eval()
-            loaded = True
-        else:
-            return False
-
-        # Load teacher
-        if os.path.exists(self.teacher_path):
-            with open(self.teacher_path, "rb") as f:
-                self.teacher = pickle.load(f)
-            loaded = True
-        else:
-            return False
-
-        # Load PCA reducer
-        if (
-            self.reducer is not None
-            and os.path.exists(self.reducer_path)
-        ):
-            with open(self.reducer_path, "rb") as f:
-                self.reducer = pickle.load(f)
             loaded = True
 
         return loaded
 
     def predict(self, dataset_cls) -> Tuple[np.ndarray, np.ndarray]:
+
         if not self.load_checkpoints():
             raise RuntimeError("Failed to load checkpoints.")
 
@@ -160,34 +144,44 @@ class ImageClassifier:
             seed=self.seed,
         )
 
-        X, y = self.embedder.embed(dataset)
-
-        # Apply PCA only if the student was trained on reduced embeddings.
-        if self.reducer is not None:
-            X = self.reducer.transform(X)
-
-        X = torch.tensor(
-            X,
-            dtype=torch.float32,
-            device=self.device,
-        )
-
         self.student.eval()
 
+        loader = torch.utils.data.DataLoader(
+            dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=4,
+            pin_memory=True,
+        )
+
         predictions = []
+        labels = []
 
         with torch.no_grad():
-            for i in range(0, len(X), self.batch_size):
-                logits = self.student(X[i:i + self.batch_size])
-                predictions.append(
-                    torch.argmax(logits, dim=1).cpu().numpy()
-                )
+
+            for batch in loader:
+
+                images = batch[0].to(self.device)
+
+                logits = self.student(images)
+
+                pred = torch.argmax(logits, dim=1)
+
+                predictions.append(pred.cpu().numpy())
+
+                if len(batch) > 1:
+                    labels.append(batch[1].numpy())
 
         predictions = np.concatenate(predictions)
 
+        if len(labels) > 0:
+            labels = np.concatenate(labels)
+        else:
+            labels = None
+
         self.save_predictions(predictions)
 
-        return predictions, y
+        return predictions, labels
 
     def save_predictions(self, predictions):
         """
@@ -205,16 +199,12 @@ class ImageClassifier:
         with prediction_path.open("wb") as f:
             np.save(f, predictions)
 
-        print_step(
-            f"Predictions saved to {prediction_path}"
-        )
+        print_step(f"Predictions saved to {prediction_path}")
 
         # Save exam submission file
         if self.dataset_name == "skin_cancer":
 
-            test_output_path = Path(
-                "data/exam_dataset/predictions.npy"
-            )
+            test_output_path = Path("data/exam_dataset/predictions.npy")
 
             test_output_path.parent.mkdir(
                 parents=True,
@@ -224,9 +214,12 @@ class ImageClassifier:
             with test_output_path.open("wb") as f:
                 np.save(f, predictions)
 
-            print_step(
-                f"Exam predictions saved to {test_output_path}"
-            )
+            final_output_path = Path("final_test_preds.npy")
+
+            with final_output_path.open("wb") as f:
+                np.save(f, predictions)
+
+            print_step(f"Exam predictions saved to {test_output_path}")
 
         return prediction_path
 
@@ -239,50 +232,45 @@ class ImageClassifier:
         # -------------------------
         # Teacher
         # -------------------------
-
         teacher_predictions = None
         teacher_accuracy = None
 
-        if self.teacher is not None:
+        if self.ditill_flag:
 
-            test_dataset = load_test_datasets(
-                self.dataset_cls,
-                seed=self.seed,
-            )
+            if self.teacher is not None:
 
-            print_step("Embedding test data")
-
-            X_test, y_test = self.embedder.embed(test_dataset)
-
-            print_step("Teacher prediction")
-
-            teacher_predictions = self.distiller._teacher_predict(
-                self.teacher,
-                self.reducer,
-                X_test,
-            )
-
-            if y_test is not None:
-                teacher_accuracy = float(
-                    (teacher_predictions == y_test).mean()
+                test_dataset = load_test_datasets(
+                    self.dataset_cls,
+                    seed=self.seed,
                 )
-                print(f"Teacher Accuracy: {teacher_accuracy:.4f}")
+
+                print_step("Embedding test data")
+
+                X_test, y_test = self.embedder.embed(test_dataset)
+
+                print_step("Teacher prediction")
+
+                teacher_predictions = self.distiller._teacher_predict(
+                    self.teacher,
+                    self.reducer,
+                    X_test,
+                )
+
+                if y_test is not None:
+                    teacher_accuracy = float((teacher_predictions == y_test).mean())
+                    print(f"Teacher Accuracy: {teacher_accuracy:.4f}")
 
         # -------------------------
         # Student
         # -------------------------
         print_step("Student prediction")
 
-        student_predictions, labels = self.predict(
-            self.dataset_cls
-        )
+        student_predictions, labels = self.predict(self.dataset_cls)
 
         student_accuracy = None
 
         if labels is not None:
-            student_accuracy = float(
-                (student_predictions == labels).mean()
-            )
+            student_accuracy = float((student_predictions == labels).mean())
             print(f"Student Accuracy: {student_accuracy:.4f}")
 
         # -------------------------
@@ -305,6 +293,12 @@ class ImageClassifier:
         return results
 
 
-clf = ImageClassifier("flowers", train_fidelity=-1, tabpfn_mode="client")
-clf.fit()
-clf.evaluate()
+if __name__ == "__main__":
+    clf = ImageClassifier(
+        "skin_cancer",
+        tabpfn_mode="local",
+    )
+
+    clf.fit()
+    # clf.load_checkpoints()
+    clf.evaluate()

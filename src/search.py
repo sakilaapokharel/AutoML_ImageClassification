@@ -1,27 +1,28 @@
-import torch
-from dataset.config import DATASETS
-from automl.search import Search
-from automl.evaluator import Evaluator
-from automl.results import Results
 import time
-from automl.config import SEARCH_SPACE
-from automl.cache import EmbeddingCache
-from automl.config import SUCCESSIVE_HALVING_FIDELITIES, SUCCESSIVE_HALVING_REDUCTION
-from automl.utils import estimate_bohb_trials
-from trainer.distill import Distiller
-from models.tabpfn import TabPFNModel
 
-from automl.successive_halving import SuccessiveHalvingSearch
-from automl.bohb import BOHBSearch
 import optuna
+import torch
 
+from src.automl.bohb import BOHBSearch
+from src.automl.cache import EmbeddingCache
+from src.automl.config import (
+    SEARCH_SPACE,
+    SUCCESSIVE_HALVING_FIDELITIES,
+    SUCCESSIVE_HALVING_REDUCTION,
+)
+from src.automl.evaluator import Evaluator
+from src.automl.results import Results
+from src.automl.search import Search
+from src.automl.successive_halving import SuccessiveHalvingSearch
+from src.automl.utils import estimate_bohb_trials
+from src.dataset.config import DATASETS
+from src.models.tabpfn import TabPFNModel
 
 class AutoML:
 
     def __init__(
         self,
         dataset: str,
-        train_fidelity: int = -1,
         seed: int = 42,
         tabpfn_mode: str = "local",
         search_strategy: str = "successive_halving",
@@ -39,7 +40,6 @@ class AutoML:
         self.seed = seed
         self.tabpfn_mode = tabpfn_mode
 
-        self.train_fidelity = train_fidelity
         self.search_strategy = search_strategy
         self.total_time = 0.0
         self.best_score = 0.0
@@ -259,51 +259,3 @@ class AutoML:
         print(best_config)
 
         return best_score, best_config
-
-    def distill(
-        self,
-        best_config,
-    ):
-        """
-        Train final student model using selected configuration.
-
-        config example:
-
-        {
-            "encoder": "mobilenet_v2",
-            "embedding_dim": 64,
-            "resize": 224,
-            "augmentation": "randaugment"
-        }
-
-        """
-        if best_config == None:
-            best_score, best_config = self.successive_halving()
-
-        print("\n" + "=" * 70)
-        print("Starting Distillation")
-        print("=" * 70)
-
-        print("Dataset:")
-        print(self.dataset_name)
-
-        print("Config:")
-        print(best_config)
-
-        result = self.distiller.fit(
-            dataset_cls=self.dataset_cls,
-            config=best_config,
-            seed=self.seed,
-        )
-
-        checkpoint_path = result["checkpoint"]
-
-        print(checkpoint_path)
-
-        print("\n" + "=" * 70)
-        print("Distillation Finished")
-        print("=" * 70)
-
-        print("Checkpoint:", result["checkpoint"])
-
-        return result

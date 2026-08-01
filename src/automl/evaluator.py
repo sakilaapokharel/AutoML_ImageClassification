@@ -1,10 +1,10 @@
 import numpy as np
-from models.encoders import get_encoder
-from models.reducers import PCAReducer
-from models.embedders import Embedder
-from automl.cache import EmbeddingCache
-from dataset.loaders import load_datasets
-from automl.utils import print_header, print_step
+from src.models.encoders import get_encoder
+from src.models.reducers import PCAReducer
+from src.models.embedders import Embedder
+from src.automl.cache import EmbeddingCache
+from src.dataset.loaders import load_datasets
+from src.automl.utils import print_header, print_step
 
 
 class Evaluator:

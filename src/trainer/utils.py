@@ -1,7 +1,6 @@
 from pathlib import Path
 import json
 
-
 def get_latest_config(dataset_name):
     results_dir = Path("results")
 
@@ -42,4 +41,3 @@ def get_best_config(configs):
         raise ValueError("No configurations provided")
 
     return max(configs, key=lambda x: x["accuracy"])
-

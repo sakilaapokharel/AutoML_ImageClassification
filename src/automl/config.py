@@ -13,7 +13,6 @@ SEARCH_SPACE = {
     ],
     "preprocess_policy": [
         "imagenet_default",
-        "grayscale_enhanced",
         "contrast_enhanced",
         "texture_preserving",
         "strong_aug",

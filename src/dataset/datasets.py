@@ -13,7 +13,6 @@ from torchvision.datasets import VisionDataset
 from torchvision.datasets.utils import download_and_extract_archive, check_integrity
 import tempfile
 import shutil
-import torch
 
 
 class BaseVisionDataset(VisionDataset):
@@ -203,35 +202,3 @@ class SkinCancerDataset(BaseVisionDataset):
     height = 450
     channels = 3
     num_classes = 7
-
-class StudentDistillDataset(torch.utils.data.Dataset):
-
-    def __init__(self, X, teacher_probs, labels, indices, transform=None):
-        self.X = X
-        self.teacher_probs = teacher_probs
-        self.labels = labels
-        self.indices = indices
-        self.transform = transform
-
-    def __len__(self):
-        return len(self.indices)
-
-    def __getitem__(self, idx):
-        real_idx = self.indices[idx]
-
-        x = self.X[real_idx]
-
-        if self.transform:
-            x = self.transform(x)
-
-        return (
-            x,
-            torch.tensor(
-                self.teacher_probs[real_idx],
-                dtype=torch.float32,
-            ),
-            torch.tensor(
-                self.labels[real_idx],
-                dtype=torch.long,
-            ),
-        )

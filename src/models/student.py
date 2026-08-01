@@ -1,89 +1,35 @@
 from torch import nn
+from src.models.encoders import get_encoder
 
 
 class Student(nn.Module):
-
     def __init__(
         self,
-        embedding_dim,
+        encoder_name,
         num_classes,
-        hidden_dim=256,
+        hidden_dim,
+        pretrained=True,
+        freeze_encoder=True,
     ):
         super().__init__()
 
-        self.network = nn.Sequential(
-            nn.Linear(
-                embedding_dim,
-                hidden_dim,
-            ),
+        self.encoder, embedding_dim = get_encoder(
+            encoder_name,
+            pretrained,
+        )
+
+        for p in self.encoder.parameters():
+            p.requires_grad = True
+
+        self.mlp = nn.Sequential(
+            nn.Linear(embedding_dim, hidden_dim),
             nn.ReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(
-                hidden_dim,
-                hidden_dim // 2,
-            ),
-            nn.ReLU(),
-            nn.Linear(
-                hidden_dim // 2,
-                num_classes,
-            ),
+            nn.Linear(hidden_dim, num_classes),
         )
 
     def forward(self, x):
-        return self.network(x)
+        z = self.encoder(x)
+        return self.mlp(z)
 
-
-# from torch import nn
-
-
-# class Student(nn.Module):
-
-#     def __init__(
-#         self,
-#         embedding_dim,
-#         num_classes,
-#         hidden_dim=512,
-#         dropout=0.3,
-#     ):
-#         super().__init__()
-
-#         self.network = nn.Sequential(
-
-#             nn.Linear(
-#                 embedding_dim,
-#                 hidden_dim,
-#             ),
-#             nn.BatchNorm1d(hidden_dim),
-#             nn.ReLU(inplace=True),
-#             nn.Dropout(dropout),
-
-#             nn.Linear(
-#                 hidden_dim,
-#                 hidden_dim,
-#             ),
-#             nn.BatchNorm1d(hidden_dim),
-#             nn.ReLU(inplace=True),
-#             nn.Dropout(dropout),
-
-#             nn.Linear(
-#                 hidden_dim,
-#                 hidden_dim // 2,
-#             ),
-#             nn.BatchNorm1d(hidden_dim // 2),
-#             nn.ReLU(inplace=True),
-#             nn.Dropout(dropout),
-
-#             nn.Linear(
-#                 hidden_dim // 2,
-#                 hidden_dim // 4,
-#             ),
-#             nn.ReLU(inplace=True),
-
-#             nn.Linear(
-#                 hidden_dim // 4,
-#                 num_classes,
-#             ),
-#         )
-
-#     def forward(self, x):
-#         return self.network(x)
+    def mlp_forward(self, z):
+        return self.mlp(z)

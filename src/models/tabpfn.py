@@ -1,16 +1,6 @@
-import torch
 import numpy as np
 
-
 class TabPFNModel:
-
-    # tabpfn_client enforces a max of 20,000,000 *cells* (rows x columns) per
-    # call, not a max row count. A fixed row-count batch size (e.g. 2,000,000)
-    # only respects this limit when num_features is small -- with more
-    # features, rows x features can exceed 20M even after "batching". Compute
-    # the safe row count per batch dynamically instead.
-    MAX_CLIENT_PREDICT_CELLS = 20_000_000
-    MAX_CLIENT_TRAIN_CELLS = 100_000_000
 
     def __init__(
         self,
@@ -19,6 +9,17 @@ class TabPFNModel:
         seed=42,
         n_estimators=1,
     ):
+        self.MAX_CLIENT_PREDICT_CELLS = 20_000_000
+        self.MAX_CLIENT_TRAIN_CELLS = 100_000_000
+
+        # tabpfn_client enforces a max of 20,000,000 *cells* (rows x columns) per
+        # call, not a max row count. A fixed row-count batch size (e.g. 2,000,000)
+        # only respects this limit when num_features is small -- with more
+        # features, rows x features can exceed 20M even after "batching". Compute
+        # the safe row count per batch dynamically instead.
+
+        self.MAX_LOCAL_PREDICT_CELLS = 500_000
+        self.MAX_LOCAL_TRAIN_CELLS = 500_000
 
         self.mode = mode
         self.seed = seed
@@ -49,21 +50,22 @@ class TabPFNModel:
                 f"Unknown TabPFN mode '{mode}'. " "Choose 'local' or 'client'."
             )
 
-    def _client_batch_size(self, X):
+    def _batch_size(self, X):
 
         num_features = X.shape[1] if X.ndim > 1 else 1
 
-        # small safety margin below the hard limit, in case the server
-        # counts a few extra cells (e.g. an implicit index/label column)
-        safe_cells = int(self.MAX_CLIENT_PREDICT_CELLS * 0.95)
+        if self.mode == "client":
+            safe_cells = int(self.MAX_CLIENT_PREDICT_CELLS * 0.95)
+        else:
+            safe_cells = int(self.MAX_LOCAL_PREDICT_CELLS * 0.95)
 
         return max(1, safe_cells // num_features)
 
     def fit(self, X_train, y_train):
 
-        if self.mode == "client":
+        num_features = X_train.shape[1]
 
-            num_features = X_train.shape[1]
+        if self.mode == "client":
 
             max_rows = self.MAX_CLIENT_TRAIN_CELLS // num_features
 
@@ -85,12 +87,35 @@ class TabPFNModel:
                     f"using seed={self.seed}"
                 )
 
-            print(
-                f"Training TabPFN with "
-                f"{len(X_train):,} samples × "
-                f"{num_features:,} features = "
-                f"{len(X_train) * num_features:,} cells"
-            )
+        elif self.mode == "local":
+
+            max_rows = self.MAX_LOCAL_TRAIN_CELLS // num_features
+
+            if len(X_train) > max_rows:
+
+                rng = np.random.default_rng(self.seed)
+
+                indices = rng.choice(
+                    len(X_train),
+                    size=max_rows,
+                    replace=False,
+                )
+
+                X_train = X_train[indices]
+                y_train = y_train[indices]
+
+                print(
+                    f"RTX 4060 limit: randomly selected "
+                    f"{max_rows:,} training samples "
+                    f"using seed={self.seed}"
+                )
+
+        print(
+            f"Training TabPFN with "
+            f"{len(X_train):,} samples × "
+            f"{num_features:,} features = "
+            f"{len(X_train) * num_features:,} cells"
+        )
 
         self.model.fit(
             X_train,
@@ -102,10 +127,10 @@ class TabPFNModel:
     def predict(
         self,
         X_test,
-        batch_size=2048,
+        batch_size=None,
     ):
-        if self.mode == "client":
-            batch_size = self._client_batch_size(X_test)
+
+        batch_size = self._batch_size(X_test)
 
         if len(X_test) <= batch_size:
             return self.model.predict(X_test)
@@ -133,10 +158,10 @@ class TabPFNModel:
     def predict_proba(
         self,
         X_test,
-        batch_size=2048,
+        batch_size=None,
     ):
-        if self.mode == "client":
-            batch_size = self._client_batch_size(X_test)
+
+        batch_size = self._batch_size(X_test)
 
         if len(X_test) <= batch_size:
             return self.model.predict_proba(X_test)

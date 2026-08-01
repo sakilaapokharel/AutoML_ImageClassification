@@ -2,7 +2,7 @@ from PIL import Image
 import numpy as np
 import cv2
 from torchvision import transforms
-from automl.config import PREPROCESS_POLICIES
+from src.automl.config import PREPROCESS_POLICIES
 from torch.utils.data import Dataset
 
 
@@ -200,10 +200,6 @@ def build_transform(
                     magnitude=5,
                 )
             )
-
-    # ----- channels -----
-
-    ops.append(transforms.Grayscale(num_output_channels=3))
 
     # ----- tensor -----
 

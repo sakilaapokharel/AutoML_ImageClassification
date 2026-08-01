@@ -1,7 +1,3 @@
-import torchvision.transforms as transforms
-from PIL import Image
-
-
 def print_header(text):
     print("\n" + "=" * 60)
     print(text)

@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-from automl.utils import print_progress
+from src.automl.utils import print_progress
 
 
 class Embedder:
